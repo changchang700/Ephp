@@ -1,0 +1,13 @@
+{
+    "name": "Ephp",
+    "description": "Ephp",
+    "authors": [
+        {
+            "name": "Li Xiao",
+            "email": "2107898148@qq.com"
+        }
+    ],
+    "require": {
+		"php": ">=7.0",
+	}
+}
