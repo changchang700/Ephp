@@ -1,5 +1,5 @@
 <?php
-namespace Ephp;
+namespace Core;
 
 class App{
 	/**
@@ -12,7 +12,7 @@ class App{
 	}
 	
 	public static function run(){
-		
+		echo 123;
 	}
 	
 	public function __destruct() {

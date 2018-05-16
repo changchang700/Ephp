@@ -12,15 +12,15 @@
 	},
     "autoload": {
         "psr-4": {
-			"Components\\": "",
-			"Config\\": "",
-			"Controllers\\": "",
-			"Core\\": "",
-			"Models\\": "",
-			"Pack\\": "",
-			"Route\\": "",
-			"Server\\": "",
-			"Views\\": ""
+			"Components\\": "Components/",
+			"Config\\": "Config/",
+			"Controllers\\": "Controllers/",
+			"Core\\": "Core/",
+			"Models\\": "Models/",
+			"Pack\\": "Pack/",
+			"Route\\": "Route/",
+			"Server\\": "Server/",
+			"Views\\": "Views/"
 		}
     }
 }

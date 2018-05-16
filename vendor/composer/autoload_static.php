@@ -7,16 +7,71 @@ namespace Composer\Autoload;
 class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
 {
     public static $prefixLengthsPsr4 = array (
-        'e' => 
+        'V' => 
         array (
-            'ephp-swoole\\' => 12,
+            'Views\\' => 6,
+        ),
+        'S' => 
+        array (
+            'Server\\' => 7,
+        ),
+        'R' => 
+        array (
+            'Route\\' => 6,
+        ),
+        'P' => 
+        array (
+            'Pack\\' => 5,
+        ),
+        'M' => 
+        array (
+            'Models\\' => 7,
+        ),
+        'C' => 
+        array (
+            'Core\\' => 5,
+            'Controllers\\' => 12,
+            'Config\\' => 7,
+            'Components\\' => 11,
         ),
     );
 
     public static $prefixDirsPsr4 = array (
-        'ephp-swoole\\' => 
+        'Views\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/',
+            0 => __DIR__ . '/../..' . '/Views',
+        ),
+        'Server\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Server',
+        ),
+        'Route\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Route',
+        ),
+        'Pack\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Pack',
+        ),
+        'Models\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Models',
+        ),
+        'Core\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Core',
+        ),
+        'Controllers\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Controllers',
+        ),
+        'Config\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Config',
+        ),
+        'Components\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/Components',
         ),
     );
 
