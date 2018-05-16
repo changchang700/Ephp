@@ -1,6 +1,7 @@
 <?php
 use Core\ServerManger;
 return [
+	'name'=>'Ephp', //应用名称
 	'set' => [
 		'daemonize' => 0, //是否进程守护
 		'worker_num' => 4,    //worker process num
@@ -20,6 +21,14 @@ return [
 			'socket_type' => ServerManger::SOCK_TCP,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9091,
+			'pack_tool' => 'LenJsonPack',
+			'route_tool' => 'NormalRoute',
+			'max_connection' => 65535
+		],
+		[
+			'socket_type' => ServerManger::SOCK_TCP,
+			'socket_name' => '0.0.0.0',
+			'socket_port' => 9094,
 			'pack_tool' => 'LenJsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535

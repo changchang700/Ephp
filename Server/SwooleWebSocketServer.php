@@ -12,11 +12,6 @@ namespace Server;
 use Server\SwooleHttpServer;
 abstract class SwooleWebSocketServer extends SwooleHttpServer
 {
-    /**
-     * @var array
-     */
-    protected $fdRequest = [];
-    protected $custom_handshake = false;
 
     public function __construct()
     {
@@ -60,14 +55,6 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
 		$this->server_manger->addServer($this,$first_server['socket_port']);
         $this->beforeSwooleStart();
         $this->server->start();
-    }
-
-    /**
-     * @param $serv
-     */
-    public function onSwooleWorkerStop($serv, $workerId)
-    {
-		
     }
 
     /**

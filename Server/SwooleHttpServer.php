@@ -4,17 +4,6 @@ namespace Server;
 use Server\SwooleServer;
 abstract class SwooleHttpServer extends SwooleServer
 {
-    /**
-     * 模板引擎
-     * @var Components\Blade\Blade
-     */
-    public $templateEngine;
-    /**
-     * @var Run
-     */
-    public $whoops;
-
-    protected $cachePath;
     public function __construct()
     {
 		parent::__construct();

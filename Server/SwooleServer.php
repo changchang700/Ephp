@@ -8,17 +8,11 @@ abstract class SwooleServer{
      * 版本
      */
     const version = "1.0";
-
     /**
-     * server name
+     * 名称
      * @var string
      */
-    public $name = '';
-    /**
-     * server user
-     * @var string
-     */
-    public $user = '';
+    public $name = 'Ephp';
     /**
      * worker数量
      * @var int
@@ -30,11 +24,24 @@ abstract class SwooleServer{
 	 */
     public $task_num = 0;
     /**
-     * @var \swoole_server
-     */
+	 * swoole server 实例
+	 * @var type 
+	 */
     public $server;
-
-	
+	/**
+	 * 所有配置项
+	 * @var type 
+	 */
+	public $config;
+	/**
+	 * 是否进程守护
+	 * @var type 
+	 */
+	public $daemon;
+	/**
+	 * 服务器端口信息
+	 * @var type 
+	 */
 	public $server_manger;
     /**
      * 共享内存表
@@ -42,20 +49,24 @@ abstract class SwooleServer{
      */
     protected $uid_fd_table;
     /**
+	 * 共享内存表
      * @var \swoole_table
      */
     protected $fd_uid_table;
 
     /**
+	 * 最大连接数
      * @var int
      */
     protected $max_connection;
 
-    /**
+	/**
      * SwooleServer constructor.
      */
     public function __construct()
     {
+		$this->config = (new Config())->get();
+		$this->name = $this->config['name'];
 		$this->server_manger = new ServerManger();
     }
 
@@ -69,6 +80,7 @@ abstract class SwooleServer{
         $this->worker_num = $set['worker_num'];
         $this->task_num = $set['task_worker_num'];
 		$this->max_connection = $set['max_connection'] ?? 102400;
+		$set['daemonize'] = $this->daemon;
 		return $set;
     }
 
@@ -131,7 +143,7 @@ abstract class SwooleServer{
      */
     public function onSwooleStart($serv)
     {
-		
+		swoole_set_process_name($this->name . '-Master');
     }
 
     /**
@@ -141,7 +153,11 @@ abstract class SwooleServer{
      */
     public function onSwooleWorkerStart($serv, $workerId)
     {
-		
+		if (!$serv->taskworker) {
+			swoole_set_process_name($this->name . '-Worker');
+        } else {
+			swoole_set_process_name($this->name . '-Tasker');
+        }
     }
 
     /**
@@ -249,7 +265,7 @@ abstract class SwooleServer{
      */
     public function onSwooleManagerStart($serv)
     {
-		
+		swoole_set_process_name($this->name . '-Manager');
     }
 
     /**
