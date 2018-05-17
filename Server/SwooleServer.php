@@ -3,13 +3,14 @@ namespace Server;
 
 use Core\Config;
 use Core\ServerManger;
+use Core\Core;
 abstract class SwooleServer{
     /**
-     * 版本
+     * 应用版本
      */
     const version = "1.0";
     /**
-     * 名称
+     * 应用名称
      * @var string
      */
     public $name = 'Ephp';
@@ -39,11 +40,16 @@ abstract class SwooleServer{
 	 */
 	public $daemon;
 	/**
-	 * 服务器端口信息
+	 * 服务器管理对象
 	 * @var type 
 	 */
-	public $server_manger;
-    /**
+	public $serverManger;
+	/**
+	 * 日志对象
+	 * @var type 
+	 */
+	public $Log;
+	/**
      * 共享内存表
      * @var \swoole_table
      */
@@ -63,19 +69,20 @@ abstract class SwooleServer{
 	/**
      * SwooleServer constructor.
      */
-    public function __construct()
-    {
+    public function __construct(){
+		//获取应用配置
 		$this->config = (new Config())->get();
+		//设置应用名称
 		$this->name = $this->config['name'];
-		$this->server_manger = new ServerManger();
+		//设置服务器管理
+		$this->serverManger = new ServerManger();
     }
 
 	/**
 	 * 设置服务器配置参数
 	 * @return type 返回配置参数
 	 */
-    public function getServerSet()
-    {
+    public function getServerSet(){
         $set = (new Config())->get('set');
         $this->worker_num = $set['worker_num'];
         $this->task_num = $set['task_worker_num'];
@@ -87,9 +94,8 @@ abstract class SwooleServer{
 	/**
 	 * 服务启动
 	 */
-    public function start()
-    {
-		$first_server = $this->server_manger->getFirstServer();
+    public function start(){
+		$first_server = $this->serverManger->getFirstServer();
         $this->server = new \swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_type']);
 		$this->server->set($this->getServerSet());
 		$this->server->on('Start', [$this, 'onSwooleStart']);
@@ -109,7 +115,7 @@ abstract class SwooleServer{
 		$this->server->on('WorkerExit', [$this, 'onSwooleWorkerExit']);
 		$this->server->on('Packet', [$this, 'onSwoolePacket']);
 		$this->server->on('Shutdown', [$this, 'onSwooleShutdown']);
-		$this->server_manger->addServer($this,$first_server['socket_port']);
+		$this->serverManger->addServer($this,$first_server['socket_port']);
 		$this->beforeSwooleStart();
 		$this->server->start();
     }
@@ -117,8 +123,7 @@ abstract class SwooleServer{
     /**
      * start前的操作
      */
-    public function beforeSwooleStart()
-    {
+    public function beforeSwooleStart(){
         //创建uid<->fd共享内存表
         $this->createUidTable();
     }
@@ -126,8 +131,7 @@ abstract class SwooleServer{
     /**
      * 创建uid<->fd共享内存表
      */
-    protected function createUidTable()
-    {
+    protected function createUidTable(){
         $this->uid_fd_table = new \swoole_table($this->max_connection);
         $this->uid_fd_table->column('fd', \swoole_table::TYPE_INT, 8);
         $this->uid_fd_table->create();
@@ -141,8 +145,7 @@ abstract class SwooleServer{
      * onSwooleStart
      * @param $serv
      */
-    public function onSwooleStart($serv)
-    {
+    public function onSwooleStart($serv){
 		swoole_set_process_name($this->name . '-Master');
     }
 
@@ -151,8 +154,7 @@ abstract class SwooleServer{
      * @param $serv
      * @param $workerId
      */
-    public function onSwooleWorkerStart($serv, $workerId)
-    {
+    public function onSwooleWorkerStart($serv, $workerId){
 		if (!$serv->taskworker) {
 			swoole_set_process_name($this->name . '-Worker');
         } else {
@@ -165,22 +167,37 @@ abstract class SwooleServer{
      * @param $serv
      * @param $fd
      */
-    public function onSwooleConnect($serv, $fd)
-    {
+    public function onSwooleConnect($serv, $fd){
 		
     }
 
     /**
      * 客户端有消息时
-     * @param $serv
-     * @param $fd
-     * @param $from_id
-     * @param $data
+     * @param $serv swoole_server对象
+     * @param $fd TCP客户端连接的唯一标识符
+     * @param $from_id TCP连接所在的Reactor线程ID
+     * @param $data 收到的数据内容，可能是文本或者二进制内容
      * @return CoreBase\Controller|void
      */
-    public function onSwooleReceive($serv, $fd, $from_id, $data)
-    {
-		
+    public function onSwooleReceive($serv, $fd, $from_id, $data){
+		$pack = $this->serverManger->getPack($this->getServerPortByFd($fd));
+		try {
+            $client_data = $pack->unPack($data);
+        } catch (\Exception $e) {
+            $pack->errorHandle($e, $fd);
+            return null;
+        }
+		$route = $this->serverManger->getRoute($this->getServerPortByFd($fd));
+		try {
+			$route->handleClientData($client_data);
+			$controller_name = $route->getControllerName();
+			$method_name = $route->getMethodName();
+			$request = null;
+			$response = null;
+			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
+		} catch (Exception $e){
+			$route->errorHandle($e, $fd);
+		}
     }
 
     /**
@@ -188,8 +205,7 @@ abstract class SwooleServer{
      * @param $serv
      * @param $fd
      */
-    public function onSwooleClose($serv, $fd)
-    {
+    public function onSwooleClose($serv, $fd){
 		
     }
 
@@ -198,8 +214,7 @@ abstract class SwooleServer{
      * @param $serv
      * @param $worker_id
      */
-    public function onSwooleWorkerStop($serv, $worker_id)
-    {
+    public function onSwooleWorkerStop($serv, $worker_id){
 		
     }
 
@@ -207,8 +222,7 @@ abstract class SwooleServer{
      * onSwooleShutdown
      * @param $serv
      */
-    public function onSwooleShutdown($serv)
-    {
+    public function onSwooleShutdown($serv){
 		
     }
 
@@ -220,8 +234,7 @@ abstract class SwooleServer{
      * @param $data
      * @return mixed
      */
-    public function onSwooleTask($serv, $task_id, $from_id, $data)
-    {
+    public function onSwooleTask($serv, $task_id, $from_id, $data){
 
     }
 
@@ -231,8 +244,7 @@ abstract class SwooleServer{
      * @param $task_id
      * @param $data
      */
-    public function onSwooleFinish($serv, $task_id, $data)
-    {
+    public function onSwooleFinish($serv, $task_id, $data){
 
     }
 
@@ -242,8 +254,7 @@ abstract class SwooleServer{
      * @param $from_worker_id
      * @param $message
      */
-    public function onSwoolePipeMessage($serv, $from_worker_id, $message)
-    {
+    public function onSwoolePipeMessage($serv, $from_worker_id, $message){
 		
     }
 
@@ -254,8 +265,7 @@ abstract class SwooleServer{
      * @param $worker_pid
      * @param $exit_code
      */
-    public function onSwooleWorkerError($serv, $worker_id, $worker_pid, $exit_code)
-    {
+    public function onSwooleWorkerError($serv, $worker_id, $worker_pid, $exit_code){
 		
     }
 
@@ -263,8 +273,7 @@ abstract class SwooleServer{
      * ManagerStart
      * @param $serv
      */
-    public function onSwooleManagerStart($serv)
-    {
+    public function onSwooleManagerStart($serv){
 		swoole_set_process_name($this->name . '-Manager');
     }
 
@@ -272,8 +281,7 @@ abstract class SwooleServer{
      * ManagerStop
      * @param $serv
      */
-    public function onSwooleManagerStop($serv)
-    {
+    public function onSwooleManagerStop($serv){
 		
     }
     /**
@@ -282,8 +290,7 @@ abstract class SwooleServer{
      * @param string $data
      * @param array $client_info
      */
-    public function onSwoolePacket($server, $data, $client_info)
-    {
+    public function onSwoolePacket($server, $data, $client_info){
 		
     }
 	/**
@@ -291,8 +298,7 @@ abstract class SwooleServer{
 	 * @param type $server
 	 * @param type $fd
 	 */
-	public function onSwooleBufferFull($server, $fd)
-    {
+	public function onSwooleBufferFull($server, $fd){
 
     }
 	/**
@@ -300,8 +306,7 @@ abstract class SwooleServer{
 	 * @param type $server
 	 * @param type $fd
 	 */
-	public function onSwooleBufferEmpty($server, $fd)
-    {
+	public function onSwooleBufferEmpty($server, $fd){
 
     }
 	/**
@@ -310,8 +315,7 @@ abstract class SwooleServer{
 	 * @param type $server
 	 * @param type $worker_id
 	 */
-	public function onSwooleWorkerExit($server, $worker_id)
-    {
+	public function onSwooleWorkerExit($server, $worker_id){
 
     }
     /**
@@ -319,8 +323,7 @@ abstract class SwooleServer{
      * @param $msg
      * @param $log
      */
-    public function onErrorHandel($msg, $log)
-    {
+    public function onErrorHandel($msg, $log){
 		
     }
     /**
@@ -332,8 +335,7 @@ abstract class SwooleServer{
      * @throws \Exception
      * @internal param $fd
      */
-    public function isWebSocket($fdinfo)
-    {
+    public function isWebSocket($fdinfo){
         if (empty($fdinfo)) {
             throw new \Exception('fd not exist');
         }
@@ -347,10 +349,17 @@ abstract class SwooleServer{
      * @param $fd
      * @return mixed
      */
-    public function getFdInfo($fd)
-    {
+    public function getFdInfo($fd){
         $fdinfo = $this->server->connection_info($fd);
         return $fdinfo;
+    }
+	
+	/** 根据fd获取服务器端口
+     * @param $fd
+     * @return mixed
+     */
+    public function getServerPortByFd($fd){
+        return $this->server->connection_info($fd)['server_port'];
     }
 
     /**
@@ -358,8 +367,7 @@ abstract class SwooleServer{
 	 * 不被心跳线程切断。
      * @param $fd fd
      */
-    public function protect($fd)
-    {
+    public function protect($fd){
         $this->server->protect($fd);
     }
 	
@@ -368,8 +376,7 @@ abstract class SwooleServer{
      * @param $fd
      * @param $data
      */
-    public function send($fd, $data)
-    {
+    public function send($fd, $data){
         if (!$this->server->exist($fd)) {
             return null;
         }
@@ -385,8 +392,7 @@ abstract class SwooleServer{
      * close fd
      * @param $fd
      */
-    public function close($fd)
-    {
+    public function close($fd){
         $this->server->close($fd);
     }
     /**
@@ -394,8 +400,7 @@ abstract class SwooleServer{
      * @param $uid
      * @return mixed
      */
-    public function getFdFromUid($uid)
-    {
+    public function getFdFromUid($uid){
         return $this->uid_fd_table->get($uid, 'fd');
     }
 
@@ -404,8 +409,7 @@ abstract class SwooleServer{
      * @param $fd
      * @return mixed
      */
-    public function getUidFromFd($fd)
-    {
+    public function getUidFromFd($fd){
         return $this->fd_uid_table->get($fd, 'uid');
     }
 	/**
@@ -414,8 +418,7 @@ abstract class SwooleServer{
      * @param $fd fd
      * @param $uid 用户id
      */
-    public function bindUid($fd, $uid)
-    {
+    public function bindUid($fd, $uid){
         $this->uid_fd_table->set($uid, ['fd' => $fd]);
         $this->fd_uid_table->set($fd, ['uid' => $uid]);
     }

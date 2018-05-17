@@ -21,7 +21,7 @@ return [
 			'socket_type' => ServerManger::SOCK_TCP,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9091,
-			'pack_tool' => 'LenJsonPack',
+			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535
 		],
@@ -29,7 +29,7 @@ return [
 			'socket_type' => ServerManger::SOCK_TCP,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9094,
-			'pack_tool' => 'LenJsonPack',
+			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535
 		],
@@ -37,7 +37,7 @@ return [
 			'socket_type' => ServerManger::SOCK_HTTP,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9092,
-			'pack_tool' => 'LenJsonPack',
+			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535
 		],
@@ -45,7 +45,7 @@ return [
 			'socket_type' => ServerManger::SOCK_WS,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9093,
-			'pack_tool' => 'LenJsonPack',
+			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535
 		]

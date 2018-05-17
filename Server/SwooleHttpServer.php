@@ -2,23 +2,21 @@
 namespace Server;
 
 use Server\SwooleServer;
-abstract class SwooleHttpServer extends SwooleServer
-{
-    public function __construct()
-    {
+use Core\Core;
+abstract class SwooleHttpServer extends SwooleServer{
+    public function __construct(){
 		parent::__construct();
     }
 
     /**
      * 启动
      */
-    public function start()
-    {
-		if (!$this->server_manger->enable_swoole_http_erver) {
+    public function start(){
+		if (!$this->serverManger->enable_swoole_http_erver) {
             parent::start();
             return;
         }
-		$first_server = $this->server_manger->getFirstServer();
+		$first_server = $this->serverManger->getFirstServer();
         $this->server = new \swoole_http_server($first_server['socket_name'], $first_server['socket_port']);
         $this->server->set($this->getServerSet());
 		$this->server->on('Start', [$this, 'onSwooleStart']);
@@ -41,7 +39,7 @@ abstract class SwooleHttpServer extends SwooleServer
 		//http独有响应回调
 		$this->server->on('Request', [$this, 'onSwooleRequest']);
 		
-		$this->server_manger->addServer($this,$first_server['socket_port']);
+		$this->serverManger->addServer($this,$first_server['socket_port']);
         $this->beforeSwooleStart();
         $this->server->start();
     }
@@ -51,9 +49,16 @@ abstract class SwooleHttpServer extends SwooleServer
      * @param $request http请求对象
      * @param $response http回应对象
      */
-    public function onSwooleRequest($request, $response)
-    {
-		$response->end("<h1>Hello Swoole. #".rand(1000, 9999)."</h1>");
+    public function onSwooleRequest($request, $response){
+		$route = $this->serverManger->getRoute($this->getServerPortByFd($request->fd));
+		try {
+			$route->handleClientRequest($request);
+			$controller_name = $route->getControllerName();
+			$method_name = $route->getMethodName();
+			$client_data = null;
+			Core::getInstance()->run($controller_name,$method_name,$client_data,$request, $response);
+		} catch (Exception $e){
+			$route->errorHttpHandle($e, $request, $response);
+		}
     }
-
 }

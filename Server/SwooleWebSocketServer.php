@@ -10,24 +10,22 @@
 namespace Server;
 
 use Server\SwooleHttpServer;
-abstract class SwooleWebSocketServer extends SwooleHttpServer
-{
+use Core\Core;
+abstract class SwooleWebSocketServer extends SwooleHttpServer{
 
-    public function __construct()
-    {
+    public function __construct(){
         parent::__construct();
     }
 
     /**
      * 启动
      */
-    public function start()
-    {
-		if (!$this->server_manger->enable_swoole_websocket_erver) {
+    public function start(){
+		if (!$this->serverManger->enable_swoole_websocket_erver) {
             parent::start();
             return;
         }
-		$first_server = $this->server_manger->getFirstServer();
+		$first_server = $this->serverManger->getFirstServer();
         $this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port']);
 		$this->server->set($this->getServerSet());
 		$this->server->on('Start', [$this, 'onSwooleStart']);
@@ -52,7 +50,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
 		$this->server->on('Message', [$this, 'onSwooleWSMessage']);
 		$this->server->on('HandShake', [$this, 'onSwooleWSHandShake']);
 		
-		$this->server_manger->addServer($this,$first_server['socket_port']);
+		$this->serverManger->addServer($this,$first_server['socket_port']);
         $this->beforeSwooleStart();
         $this->server->start();
     }
@@ -62,8 +60,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
      * @param $server
      * @param $request
      */
-    public function onSwooleWSOpen($server, $request)
-    {
+    public function onSwooleWSOpen($server, $request){
 		
     }
 
@@ -72,9 +69,25 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer
      * @param $server
      * @param $frame
      */
-    public function onSwooleWSMessage($server, $frame)
-    {
-		
+    public function onSwooleWSMessage($server, $frame){
+		$pack = $this->serverManger->getPack($this->getServerPortByFd($frame->fd));
+		try {
+            $client_data = $pack->unPack($frame->data);
+        } catch (\Exception $e) {
+            $pack->errorHandle($e, $frame->fd);
+            return null;
+        }
+		$route = $this->serverManger->getRoute($this->getServerPortByFd($frame->fd));
+		try {
+			$route->handleClientData($client_data);
+			$controller_name = $route->getControllerName();
+			$method_name = $route->getMethodName();
+			$request = null;
+			$response = null;
+			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
+		} catch (Exception $e){
+			$route->errorHandle($e, $frame->fd);
+		}
     }
 
     /**

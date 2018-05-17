@@ -13,10 +13,12 @@ class ServerManger{
 	public $enable_swoole_websocket_erver = false;
 	
 	public $config;
+	public $routes = [];
+	public $packs = [];
 	
 	public function __construct() {
-		$this->config = (new Config())->get('server');
-		foreach ($this->config as $value) {
+		$config_before = (new Config())->get('server');
+		foreach ($config_before as $value) {
             if ($value['socket_type'] == self::SOCK_WS) {
                 $this->enable_swoole_websocket_erver = true;
             } else if ($value['socket_type'] == self::SOCK_HTTP) {
@@ -24,17 +26,20 @@ class ServerManger{
             } else {
                 $this->enable_swoole_tcp_server = true;
             }
+			$config_after[$value['socket_port']] = $value;
+			
         }
+		$this->config = $config_after;
 	}
 	
 	/**
-	 * 监听端口
-	 * @param SwooleServer $swoole_server
-	 * @param type $first_port
+	 * 添加服务
+	 * @param SwooleServer $swoole_server swoole实例
+	 * @param type $first_port 第一个端口
 	 * @throws \Exception
 	 */
     public function addServer(SwooleServer $swoole_server,$first_port){
-        foreach ($this->config as $key => $value) {
+        foreach ($this->config as $value) {
             if ($value['socket_port'] == $first_port) continue;
 			$set = array();
             if ($value['socket_type'] == self::SOCK_HTTP || $value['socket_type'] == self::SOCK_WS) {
@@ -87,6 +92,48 @@ class ServerManger{
             }
         }
         return $this->config[0];
+    }
+	
+	public function getRoute($server_port){
+		if(isset($this->routes[$server_port])){
+			return $this->routes[$server_port];
+		}else{
+			$route_tool = $this->config[$server_port]['route_tool'];
+			if (class_exists($route_tool)) {
+				$route = new $route_tool;
+				$this->routes[$server_port] = $route;
+				return $route;
+			}
+			$route_class_name = "Route\\" . $route_tool;
+			if (class_exists($route_class_name)) {
+				$route = new $route_class_name;
+				$this->routes[$server_port] = $route;
+			}else{
+				throw new \Exception("class $route_tool is not exist.");
+			}
+			return $route;
+		}
+    }
+
+    public function getPack($server_port){
+		if(isset($this->packs[$server_port])){
+			return $this->packs[$server_port];
+		}else{
+			$pack_tool = $this->config[$server_port]['pack_tool'];
+			if (class_exists($pack_tool)) {
+				$pack = new $pack_tool;
+				$this->packs[$server_port] = $pack;
+				return $pack;
+			}
+			$pack_class_name = "Pack\\" . $pack_tool;
+			if (class_exists($pack_class_name)) {
+				$pack = new $pack_class_name;
+				$this->packs[$server_port] = $pack;
+			} else {
+				throw new \Exception("class $pack_tool is not exist.");
+			}
+			return $pack;
+		}
     }
 }
 

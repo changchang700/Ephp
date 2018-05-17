@@ -9,7 +9,7 @@ class Server extends SwooleWebSocketServer{
 	
 	public function __construct() {
 		parent::__construct();
-		self::$application = $this;
+		self::$application = &$this;
 	}
 	
 	public function run(){
@@ -24,9 +24,6 @@ class Server extends SwooleWebSocketServer{
 						$this->daemon = 1;
 					}
 					Console::gui();
-					if(!empty($option) && $option == "-d"){
-						Console::success("Service start by daemon");
-					}
 					$this->start();
 					break;
 				case 'stop':
@@ -51,15 +48,9 @@ class Server extends SwooleWebSocketServer{
 		$this->checkAppStatus();
 	}
 	/**
-	 * APP停止之前执行的动作
-	 */
-	public function beforeAppStop(){
-		
-	}
-	/**
 	 * 检查服务状态
 	 */
-	public function checkAppStatus(){
+	private function checkAppStatus(){
 		$master_pid = exec("ps -ef | grep {$this->name}-Master| grep -v 'grep ' | awk '{print $2}'");
 		if (!empty($master_pid)) {
             Console::Error("Service already running");

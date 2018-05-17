@@ -55,9 +55,7 @@ class Console{
 	}
 	
 	public static function warning($msg){
-		echo self::colorFont(str_repeat(" ", self::$lengh),43,37)."\n";
-		echo self::colorFont(str_repeat(" ", (self::$lengh-strlen($msg)+2)/2),43,37).self::colorFont($msg,43,37).self::colorFont(str_repeat(" ", (self::$lengh-strlen($msg))/2),43,37)."\n";
-		echo self::colorFont(str_repeat(" ", self::$lengh),43,37)."\n";
+		echo self::colorFont("[".date("Y-m-d H:i:s")."][warning]:".$msg,33)."\n";
 	}
 
 	/**
