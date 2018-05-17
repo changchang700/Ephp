@@ -85,7 +85,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
 			$request = null;
 			$response = null;
 			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
-		} catch (Exception $e){
+		} catch (\Exception $e){
 			$route->errorHandle($e, $frame->fd);
 		}
     }

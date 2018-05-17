@@ -31,7 +31,7 @@ class Core{
 	 * @return type
 	 */
     public function run($controller_name,$method_name,$client_data,&$request, &$response){
-        if ($controller_name == null) return null;
+        if ($controller_name == null) $controller_name = 'index';
 		if($method_name == null) $method_name = 'index';
         $controller_names = $this->pool[$controller_name] ?? null;
         if ($controller_names == null) {
@@ -53,7 +53,7 @@ class Core{
 			$obj = new $class_name;
 			return $this->excute($controller_name,$obj, $method_name, $client_data,$request, $response);
 		} else {
-			Console::warning("not find the controller \"{$controller_name}\"",33);
+			throw new \Exception("not find the controller \"{$controller_name}\"");
 		}
     }
 	/**
@@ -75,7 +75,7 @@ class Core{
 				Console::warning($exc->getMessage(),33);
 			}
 		}else{
-			Console::warning("not find the method \"{$method_name}\"",33);
+			throw new \Exception("not find the method \"{$method_name}\"");
 		}
 	}
 

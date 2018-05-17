@@ -195,7 +195,7 @@ abstract class SwooleServer{
 			$request = null;
 			$response = null;
 			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
-		} catch (Exception $e){
+		} catch (\Exception $e){
 			$route->errorHandle($e, $fd);
 		}
     }

@@ -1,8 +1,8 @@
 <?php
 namespace Route;
 
-class NormalRoute implements IRoute
-{
+use Server\Server;
+class NormalRoute implements IRoute{
     private $client_data;
 
     public function __construct(){
@@ -61,15 +61,11 @@ class NormalRoute implements IRoute
     }
 
     public function errorHandle(\Exception $e, $fd){
-        get_instance()->send($fd, "Error:" . $e->getMessage(), true);
-        get_instance()->close($fd);
+        Server::$application->send($fd, "Error:" . $e->getMessage(), true);
+        Server::$application->close($fd);
     }
 
     public function errorHttpHandle(\Exception $e, $request, $response){
-        //重定向到404
-        $response->status(302);
-        $location = 'http://' . $request->header['host'] . "/" . '404';
-        $response->header('Location', $location);
-        $response->end('');
+        $response->end('not found');
     }
 }

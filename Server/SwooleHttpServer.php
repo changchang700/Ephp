@@ -57,7 +57,7 @@ abstract class SwooleHttpServer extends SwooleServer{
 			$method_name = $route->getMethodName();
 			$client_data = null;
 			Core::getInstance()->run($controller_name,$method_name,$client_data,$request, $response);
-		} catch (Exception $e){
+		} catch (\Exception $e){
 			$route->errorHttpHandle($e, $request, $response);
 		}
     }
