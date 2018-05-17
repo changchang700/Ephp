@@ -1,7 +1,7 @@
 <?php
 namespace Server;
 
-use Components\Config;
+use Core\Config;
 use Core\ServerManger;
 abstract class SwooleServer{
     /**

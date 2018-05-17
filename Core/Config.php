@@ -1,5 +1,5 @@
 <?php
-namespace Components;
+namespace Core;
 class Config{
 	private $config;
 	

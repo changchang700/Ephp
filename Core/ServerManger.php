@@ -1,7 +1,7 @@
 <?php
 namespace Core;
 
-use Components\Config;
+use Core\Config;
 use Server\SwooleServer;
 class ServerManger{
 	const SOCK_TCP = 1;

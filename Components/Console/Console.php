@@ -50,7 +50,6 @@ class Console{
 	
 	public static function error($msg){
 		echo self::colorFont(str_repeat(" ", self::$lengh),41,37)."\n";
-		var_dump(strlen($msg));exit;
 		echo self::colorFont(str_repeat(" ", (self::$lengh-strlen($msg)+2)/2),41,37).self::colorFont($msg,41,37).self::colorFont(str_repeat(" ", (self::$lengh-strlen($msg))/2),41,37)."\n";
 		echo self::colorFont(str_repeat(" ", self::$lengh),41,37)."\n";
 	}
