@@ -1,4 +1,7 @@
 <?php
+/**
+ * 本文件为整个系统入口文件
+ */
 namespace Server;
 
 use Server\SwooleWebSocketServer;
@@ -21,7 +24,7 @@ class Server extends SwooleWebSocketServer{
 					$this->beforeAppStart();
 					$option = $argv[2]??"";
 					if(!empty($option) && $option == "-d"){
-						$this->daemon = 1;
+						$this->daemonize = 1;
 					}
 					Console::gui();
 					$this->start();

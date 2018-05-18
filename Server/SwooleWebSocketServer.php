@@ -21,11 +21,11 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * 启动
      */
     public function start(){
-		if (!$this->serverManger->enable_swoole_websocket_erver) {
+		if (!$this->enable_swoole_websocket_erver) {
             parent::start();
             return;
         }
-		$first_server = $this->serverManger->getFirstServer();
+		$first_server = $this->getFirstServer();
         $this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port']);
 		$this->server->set($this->getServerSet());
 		$this->server->on('Start', [$this, 'onSwooleStart']);
@@ -50,7 +50,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
 		$this->server->on('Message', [$this, 'onSwooleWSMessage']);
 		$this->server->on('HandShake', [$this, 'onSwooleWSHandShake']);
 		
-		$this->serverManger->addServer($this,$first_server['socket_port']);
+		$this->addServer($first_server['socket_port']);
         $this->beforeSwooleStart();
         $this->server->start();
     }
@@ -70,14 +70,14 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * @param $frame
      */
     public function onSwooleWSMessage($server, $frame){
-		$pack = $this->serverManger->getPack($this->getServerPortByFd($frame->fd));
+		$pack = $this->getPack($this->getServerPortByFd($frame->fd));
 		try {
             $client_data = $pack->unPack($frame->data);
         } catch (\Exception $e) {
             $pack->errorHandle($e, $frame->fd);
             return null;
         }
-		$route = $this->serverManger->getRoute($this->getServerPortByFd($frame->fd));
+		$route = $this->getRoute($this->getServerPortByFd($frame->fd));
 		try {
 			$route->handleClientData($client_data);
 			$controller_name = $route->getControllerName();

@@ -12,11 +12,11 @@ abstract class SwooleHttpServer extends SwooleServer{
      * 启动
      */
     public function start(){
-		if (!$this->serverManger->enable_swoole_http_erver) {
+		if (!$this->enable_swoole_http_erver) {
             parent::start();
             return;
         }
-		$first_server = $this->serverManger->getFirstServer();
+		$first_server = $this->getFirstServer();
         $this->server = new \swoole_http_server($first_server['socket_name'], $first_server['socket_port']);
         $this->server->set($this->getServerSet());
 		$this->server->on('Start', [$this, 'onSwooleStart']);
@@ -39,7 +39,7 @@ abstract class SwooleHttpServer extends SwooleServer{
 		//http独有响应回调
 		$this->server->on('Request', [$this, 'onSwooleRequest']);
 		
-		$this->serverManger->addServer($this,$first_server['socket_port']);
+		$this->addServer($first_server['socket_port']);
         $this->beforeSwooleStart();
         $this->server->start();
     }
@@ -50,7 +50,7 @@ abstract class SwooleHttpServer extends SwooleServer{
      * @param $response http回应对象
      */
     public function onSwooleRequest($request, $response){
-		$route = $this->serverManger->getRoute($this->getServerPortByFd($request->fd));
+		$route = $this->getRoute($this->getServerPortByFd($request->fd));
 		try {
 			$route->handleClientRequest($request);
 			$controller_name = $route->getControllerName();

@@ -1,102 +1,22 @@
 <?php
 namespace Server;
 
-use Core\Config;
-use Core\ServerManger;
 use Core\Core;
-abstract class SwooleServer{
-    /**
-     * 应用版本
-     */
-    const version = "1.0";
-    /**
-     * 应用名称
-     * @var string
-     */
-    public $name = 'Ephp';
-    /**
-     * worker数量
-     * @var int
-     */
-    public $worker_num = 0;
-	/**
-	 * task进程数量
-	 * @var type 
-	 */
-    public $task_num = 0;
-    /**
-	 * swoole server 实例
-	 * @var type 
-	 */
-    public $server;
-	/**
-	 * 所有配置项
-	 * @var type 
-	 */
-	public $config;
-	/**
-	 * 是否进程守护
-	 * @var type 
-	 */
-	public $daemon;
-	/**
-	 * 服务器管理对象
-	 * @var type 
-	 */
-	public $serverManger;
-	/**
-	 * 日志对象
-	 * @var type 
-	 */
-	public $Log;
-	/**
-     * 共享内存表
-     * @var \swoole_table
-     */
-    protected $uid_fd_table;
-    /**
-	 * 共享内存表
-     * @var \swoole_table
-     */
-    protected $fd_uid_table;
-
-    /**
-	 * 最大连接数
-     * @var int
-     */
-    protected $max_connection;
-
+use Server\Swoole;
+abstract class SwooleServer extends Swoole{
 	/**
      * SwooleServer constructor.
      */
     public function __construct(){
-		//获取应用配置
-		$this->config = (new Config())->get();
-		//设置应用名称
-		$this->name = $this->config['name'];
-		//设置服务器管理
-		$this->serverManger = new ServerManger();
-    }
-
-	/**
-	 * 设置服务器配置参数
-	 * @return type 返回配置参数
-	 */
-    public function getServerSet(){
-        $set = (new Config())->get('set');
-        $this->worker_num = $set['worker_num'];
-        $this->task_num = $set['task_worker_num'];
-		$this->max_connection = $set['max_connection'] ?? 102400;
-		$set['daemonize'] = $this->daemon;
-		return $set;
+		parent::__construct();
     }
 
 	/**
 	 * 服务启动
 	 */
     public function start(){
-		$first_server = $this->serverManger->getFirstServer();
-        $this->server = new \swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_type']);
+		$first_server = $this->getFirstServer();
+        $this->server = new swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_type']);
 		$this->server->set($this->getServerSet());
 		$this->server->on('Start', [$this, 'onSwooleStart']);
 		$this->server->on('WorkerStart', [$this, 'onSwooleWorkerStart']);
@@ -115,30 +35,9 @@ abstract class SwooleServer{
 		$this->server->on('WorkerExit', [$this, 'onSwooleWorkerExit']);
 		$this->server->on('Packet', [$this, 'onSwoolePacket']);
 		$this->server->on('Shutdown', [$this, 'onSwooleShutdown']);
-		$this->serverManger->addServer($this,$first_server['socket_port']);
+		$this->addServer($first_server['socket_port']);
 		$this->beforeSwooleStart();
 		$this->server->start();
-    }
-
-    /**
-     * start前的操作
-     */
-    public function beforeSwooleStart(){
-        //创建uid<->fd共享内存表
-        $this->createUidTable();
-    }
-
-    /**
-     * 创建uid<->fd共享内存表
-     */
-    protected function createUidTable(){
-        $this->uid_fd_table = new \swoole_table($this->max_connection);
-        $this->uid_fd_table->column('fd', \swoole_table::TYPE_INT, 8);
-        $this->uid_fd_table->create();
-
-        $this->fd_uid_table = new \swoole_table($this->max_connection);
-        $this->fd_uid_table->column('uid', \swoole_table::TYPE_STRING, 32);
-        $this->fd_uid_table->create();
     }
 
     /**
@@ -180,14 +79,14 @@ abstract class SwooleServer{
      * @return CoreBase\Controller|void
      */
     public function onSwooleReceive($serv, $fd, $from_id, $data){
-		$pack = $this->serverManger->getPack($this->getServerPortByFd($fd));
+		$pack = $this->getPack($this->getServerPortByFd($fd));
 		try {
             $client_data = $pack->unPack($data);
         } catch (\Exception $e) {
             $pack->errorHandle($e, $fd);
             return null;
         }
-		$route = $this->serverManger->getRoute($this->getServerPortByFd($fd));
+		$route = $this->getRoute($this->getServerPortByFd($fd));
 		try {
 			$route->handleClientData($client_data);
 			$controller_name = $route->getControllerName();
@@ -325,112 +224,5 @@ abstract class SwooleServer{
      */
     public function onErrorHandel($msg, $log){
 		
-    }
-    /**
-     * 判断这个fd是不是一个WebSocket连接
-	 * 用于区分tcp和websocket
-     * 握手后才识别为websocket
-     * @param $fdinfo
-     * @return bool
-     * @throws \Exception
-     * @internal param $fd
-     */
-    public function isWebSocket($fdinfo){
-        if (empty($fdinfo)) {
-            throw new \Exception('fd not exist');
-        }
-        if (array_key_exists('websocket_status', $fdinfo)) {
-            return $fdinfo['server_port'];
-        }
-        return false;
-    }
-    /**
-	 * 通过fd获取客户端信息
-     * @param $fd
-     * @return mixed
-     */
-    public function getFdInfo($fd){
-        $fdinfo = $this->server->connection_info($fd);
-        return $fdinfo;
-    }
-	
-	/** 根据fd获取服务器端口
-     * @param $fd
-     * @return mixed
-     */
-    public function getServerPortByFd($fd){
-        return $this->server->connection_info($fd)['server_port'];
-    }
-
-    /**
-     * 设置客户端连接为保护状态
-	 * 不被心跳线程切断。
-     * @param $fd fd
-     */
-    public function protect($fd){
-        $this->server->protect($fd);
-    }
-	
-    /**
-     * 发送数据
-     * @param $fd
-     * @param $data
-     */
-    public function send($fd, $data){
-        if (!$this->server->exist($fd)) {
-            return null;
-        }
-		$fdinfo = $this->getFdInfo($fd);
-		if($this->isWebSocket($fdinfo)){
-			return $this->server->push($fd, $data);
-		}else{
-			return $this->server->send($fd, $data);
-		}
-    }
-    /**
-     * 服务器主动关闭链接
-     * close fd
-     * @param $fd
-     */
-    public function close($fd){
-        $this->server->close($fd);
-    }
-    /**
-     * 通过Uid获取fd
-     * @param $uid
-     * @return mixed
-     */
-    public function getFdFromUid($uid){
-        return $this->uid_fd_table->get($uid, 'fd');
-    }
-
-    /**
-     * 通过fd获取uid
-     * @param $fd
-     * @return mixed
-     */
-    public function getUidFromFd($fd){
-        return $this->fd_uid_table->get($fd, 'uid');
-    }
-	/**
-     * 将fd绑定到uid
-	 * uid不能为0
-     * @param $fd fd
-     * @param $uid 用户id
-     */
-    public function bindUid($fd, $uid){
-        $this->uid_fd_table->set($uid, ['fd' => $fd]);
-        $this->fd_uid_table->set($fd, ['uid' => $uid]);
-    }
-
-    /**
-     * 解绑uid
-	 * 链接断开自动解绑
-     * @param $uid 用户ID
-     */
-    public function unBindUid($uid, $fd){
-        //更新共享内存
-        $this->uid_fd_table->del($uid);
-        $this->fd_uid_table->del($fd);
     }
 }

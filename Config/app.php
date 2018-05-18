@@ -1,5 +1,5 @@
 <?php
-use Core\ServerManger;
+use Server\Swoole;
 return [
 	'name'=>'Ephp', //应用名称
 	'set' => [
@@ -18,7 +18,7 @@ return [
 	],
 	'server' => [
 		[
-			'socket_type' => ServerManger::SOCK_TCP,
+			'socket_type' => Swoole::SOCK_TCP,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9091,
 			'pack_tool' => 'JsonPack',
@@ -26,7 +26,7 @@ return [
 			'max_connection' => 65535
 		],
 		[
-			'socket_type' => ServerManger::SOCK_TCP,
+			'socket_type' => Swoole::SOCK_TCP,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9094,
 			'pack_tool' => 'JsonPack',
@@ -34,7 +34,7 @@ return [
 			'max_connection' => 65535
 		],
 		[
-			'socket_type' => ServerManger::SOCK_HTTP,
+			'socket_type' => Swoole::SOCK_HTTP,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9092,
 			'pack_tool' => 'JsonPack',
@@ -42,9 +42,25 @@ return [
 			'max_connection' => 65535
 		],
 		[
-			'socket_type' => ServerManger::SOCK_WS,
+			'socket_type' => Swoole::SOCK_HTTP,
+			'socket_name' => '0.0.0.0',
+			'socket_port' => 9096,
+			'pack_tool' => 'JsonPack',
+			'route_tool' => 'NormalRoute',
+			'max_connection' => 65535
+		],
+		[
+			'socket_type' => Swoole::SOCK_WS,
 			'socket_name' => '0.0.0.0',
 			'socket_port' => 9093,
+			'pack_tool' => 'JsonPack',
+			'route_tool' => 'NormalRoute',
+			'max_connection' => 65535
+		],
+		[
+			'socket_type' => Swoole::SOCK_WS,
+			'socket_name' => '0.0.0.0',
+			'socket_port' => 9095,
 			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535

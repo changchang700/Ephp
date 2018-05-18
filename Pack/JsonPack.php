@@ -2,6 +2,7 @@
 namespace Pack;
 
 use Components\Console\Console;
+use Server\Server;
 class JsonPack implements IPack{
     protected $last_data;
     protected $last_data_result;
@@ -19,7 +20,7 @@ class JsonPack implements IPack{
     public function unPack($data){
         $value = json_decode($data);
         if (empty($value)) {
-            throw new \Exception('json unPack 失败');
+            throw new \Exception('Json unPack failed');
         }
         return $value;
     }
@@ -37,6 +38,7 @@ class JsonPack implements IPack{
     }
 
     public function errorHandle($e, $fd){
-		Console::warning("unpack fail");
+		Server::$application->send($fd, "Error:" . $e->getMessage(), true);
+		Server::$application->close($fd);
     }
 }

@@ -20,7 +20,7 @@ class NormalRoute implements IRoute{
         if (isset($this->client_data->controller_name) && isset($this->client_data->method_name)) {
             return $this->client_data;
         } else {
-            throw new \Exception('route 数据缺少必要字段');
+            throw new \Exception('Missing required fields');
         }
 
     }
@@ -60,11 +60,22 @@ class NormalRoute implements IRoute{
         return $this->client_data->method_name;
     }
 
+	/**
+	 * tcp websocket错误回调
+	 * @param \Exception $e
+	 * @param type $fd
+	 */
     public function errorHandle(\Exception $e, $fd){
         Server::$application->send($fd, "Error:" . $e->getMessage(), true);
         Server::$application->close($fd);
     }
 
+	/**
+	 * http错误回调
+	 * @param \Exception $e
+	 * @param type $request
+	 * @param type $response
+	 */
     public function errorHttpHandle(\Exception $e, $request, $response){
         $response->end('not found');
     }
