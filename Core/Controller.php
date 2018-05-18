@@ -4,26 +4,21 @@ namespace Core;
 use Core\Core;
 class Controller{
 	/**
-	 * 用户fd
-	 * @var type 
-	 */
-	public $fd;
-	/**
 	 * 使用TCP WEBSOCKET协议
 	 * 收到的客户端数据
 	 * @var type 
 	 */
-	public $client_data;
+	public $client_data = null;
 	/**
      * http response
      * @var \swoole_http_request
      */
-    protected $request;
+    protected $request = null;
     /**
      * http response
      * @var \swoole_http_response
      */
-    protected $response;
+    protected $response = null;
 	
 	/**
 	 * 设置数据

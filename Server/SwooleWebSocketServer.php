@@ -70,23 +70,25 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * @param $frame
      */
     public function onSwooleWSMessage($server, $frame){
+		//解析封包
 		$pack = $this->getPack($this->getServerPortByFd($frame->fd));
 		try {
             $client_data = $pack->unPack($frame->data);
         } catch (\Exception $e) {
-            $pack->errorHandle($e, $frame->fd);
-            return null;
+            return $pack->errorHandle($e, $frame->fd);
         }
+		//解析路由
 		$route = $this->getRoute($this->getServerPortByFd($frame->fd));
 		try {
 			$route->handleClientData($client_data);
+			
 			$controller_name = $route->getControllerName();
 			$method_name = $route->getMethodName();
 			$request = null;
 			$response = null;
 			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
-		} catch (\Exception $e){
-			$route->errorHandle($e, $frame->fd);
+		}catch(\Exception $e){
+			return $route->errorHandle($e, $frame->fd);
 		}
     }
 

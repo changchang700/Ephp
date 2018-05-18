@@ -2,6 +2,7 @@
 use Server\Swoole;
 return [
 	'name'=>'Ephp', //应用名称
+	'show_error_message' => true,
 	'set' => [
 		'daemonize' => 0, //是否进程守护
 		'worker_num' => 4,    //worker process num

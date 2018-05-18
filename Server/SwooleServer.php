@@ -3,6 +3,7 @@ namespace Server;
 
 use Core\Core;
 use Server\Swoole;
+use Components\Marco\SwooleMarco;
 abstract class SwooleServer extends Swoole{
 	/**
      * SwooleServer constructor.
@@ -79,23 +80,25 @@ abstract class SwooleServer extends Swoole{
      * @return CoreBase\Controller|void
      */
     public function onSwooleReceive($serv, $fd, $from_id, $data){
+		//解析封包
 		$pack = $this->getPack($this->getServerPortByFd($fd));
 		try {
             $client_data = $pack->unPack($data);
         } catch (\Exception $e) {
-            $pack->errorHandle($e, $fd);
-            return null;
+            return $pack->errorHandle($e, $fd);
         }
+		//解析路由
 		$route = $this->getRoute($this->getServerPortByFd($fd));
 		try {
 			$route->handleClientData($client_data);
+			
 			$controller_name = $route->getControllerName();
 			$method_name = $route->getMethodName();
 			$request = null;
 			$response = null;
 			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
 		} catch (\Exception $e){
-			$route->errorHandle($e, $fd);
+			return $route->errorHandle($e, $fd);
 		}
     }
 
@@ -134,7 +137,25 @@ abstract class SwooleServer extends Swoole{
      * @return mixed
      */
     public function onSwooleTask($serv, $task_id, $from_id, $data){
-
+		$type = $data['type'] ?? '';
+        $message = $data['message'] ?? '';
+        switch ($type) {
+            case SwooleMarco::MSG_TYPE_SEND_BATCH://发送消息
+                foreach ($message['fd'] as $fd) {
+                    $this->send($fd, $message['data'], true);
+                }
+                return null;
+            case SwooleMarco::MSG_TYPE_SEND_ALL://发送广播
+                foreach ($this->uid_fd_table as $row) {
+                    $this->send($row['fd'], $message['data'], true);
+                }
+                return null;
+            case SwooleMarco::MSG_TYPE_SEND_ALL_FD;//发送广播
+                foreach ($serv->connections as $fd) {
+                    $serv->send($fd, $message['data'], true);
+                }
+                return null;
+        }
     }
 
     /**

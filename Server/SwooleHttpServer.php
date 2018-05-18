@@ -50,9 +50,11 @@ abstract class SwooleHttpServer extends SwooleServer{
      * @param $response http回应对象
      */
     public function onSwooleRequest($request, $response){
+		//解析路由
 		$route = $this->getRoute($this->getServerPortByFd($request->fd));
 		try {
 			$route->handleClientRequest($request);
+			
 			$controller_name = $route->getControllerName();
 			$method_name = $route->getMethodName();
 			$client_data = null;

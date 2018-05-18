@@ -2,6 +2,7 @@
 namespace Route;
 
 use Server\Server;
+use Core\Config;
 class NormalRoute implements IRoute{
     private $client_data;
 
@@ -77,6 +78,11 @@ class NormalRoute implements IRoute{
 	 * @param type $response
 	 */
     public function errorHttpHandle(\Exception $e, $request, $response){
-        $response->end('not found');
+		$response->status(404);
+		if(Config::get_instance()->get('show_error_message')){
+			$response->end($e->getMessage());
+		}else{
+			$response->end('404 not found');
+		}
     }
 }

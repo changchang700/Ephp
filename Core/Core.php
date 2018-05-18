@@ -30,7 +30,8 @@ class Core{
 	 * @param type $params 参数
 	 * @return type
 	 */
-    public function run($controller_name,$method_name,$client_data,&$request, &$response){
+    public function run(&$controller_name,&$method_name,&$client_data,&$request, &$response){
+		//定义默认方法
         if ($controller_name == null) $controller_name = 'index';
 		if($method_name == null) $method_name = 'index';
         $controller_names = $this->pool[$controller_name] ?? null;
@@ -53,7 +54,7 @@ class Core{
 			$obj = new $class_name;
 			return $this->excute($controller_name,$obj, $method_name, $client_data,$request, $response);
 		} else {
-			throw new \Exception("not find the controller \"{$controller_name}\"");
+			throw new \Exception("Not find the controller \"{$controller_name}\"");
 		}
     }
 	/**
@@ -75,7 +76,7 @@ class Core{
 				Console::warning($exc->getMessage(),33);
 			}
 		}else{
-			throw new \Exception("not find the method \"{$method_name}\"");
+			throw new \Exception("Not find the method \"{$method_name}\"");
 		}
 	}
 

@@ -4,7 +4,7 @@ namespace Core;
 class Config{
 	/**
 	 * 单例本身
-	 * @var type 
+	 * @var Core\Config
 	 */
 	public static $instance;
 	/**
@@ -14,7 +14,7 @@ class Config{
 	private $config;
 	/**
 	 * 获取本身实例
-	 * @return type
+	 * @return Config
 	 */
 	public static function get_instance(){
 		if(!self::$instance instanceof self){

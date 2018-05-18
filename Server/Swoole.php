@@ -3,6 +3,7 @@ namespace Server;
 
 use Core\Config;
 
+use Components\Marco\SwooleMarco;
 abstract class Swoole{
     /**
      * 应用版本
@@ -125,9 +126,9 @@ abstract class Swoole{
 	}
 	
     /**
-     * start前的操作
-     */
-    public function beforeSwooleStart(){
+	 * 启动swoole之前操作
+	 */
+    protected function beforeSwooleStart(){
         //创建uid<->fd共享内存表
         $this->createUidTable();
     }
@@ -148,7 +149,7 @@ abstract class Swoole{
 	 * 设置swoole set配置参数
 	 * @return type 返回配置参数
 	 */
-    public function getServerSet(){
+    protected function getServerSet(){
         $set = $this->config['set'];
 		//根据命令行设置的-d参数是否启动进程守护
 		$set['daemonize'] = $this->daemonize;
@@ -160,7 +161,7 @@ abstract class Swoole{
 	 * @param type $first_port 第一个端口
 	 * @throws \Exception
 	 */
-    public function addServer($first_port){
+    protected function addServer($first_port){
         foreach ($this->port_confit as $value) {
             if ($value['socket_port'] == $first_port) continue;
 			$set = [];
@@ -201,10 +202,10 @@ abstract class Swoole{
         }
     }
 	/**
-	 * 获取第一个端口
+	 * 获取第一个服务
 	 * @return type
 	 */
-	public function getFirstServer(){
+	protected function getFirstServer(){
         if ($this->enable_swoole_websocket_erver) {
             $type = self::SOCK_WS;
         } else if ($this->enable_swoole_http_erver) {
@@ -225,7 +226,7 @@ abstract class Swoole{
 	 * @return \Server\route_class_name|\Server\route_tool
 	 * @throws \Exception
 	 */
-	public function getRoute($server_port){
+	protected function getRoute($server_port){
 		if(isset($this->routes[$server_port])){
 			return $this->routes[$server_port];
 		}else{
@@ -251,7 +252,7 @@ abstract class Swoole{
 	 * @return \Server\pack_tool|\Server\pack_class_name
 	 * @throws \Exception
 	 */
-    public function getPack($server_port){
+    protected function getPack($server_port){
 		if(isset($this->packs[$server_port])){
 			return $this->packs[$server_port];
 		}else{
@@ -272,7 +273,33 @@ abstract class Swoole{
 		}
     }
 	
-	
+	/**
+     * 获取workerId
+     * @return int
+     */
+    public function getWorkerId(){
+        return $this->workerId;
+    }
+
+    /**
+     * 是不是worker进程
+     * @param null $worker_id
+     * @return bool
+     */
+    public function isWorker($worker_id = null){
+        if ($worker_id == null) {
+            $worker_id = $this->workerId;
+        }
+        return $worker_id < $this->worker_num ? true : false;
+    }
+
+    /**
+     * 是否是task进程
+     * @return bool
+     */
+    public function isTaskWorker(){
+        return $this->server->taskworker ?? false;
+    }
     /**
      * 判断这个fd是不是一个WebSocket连接
 	 * 用于区分tcp和websocket
@@ -305,10 +332,24 @@ abstract class Swoole{
      * @param $fd
      * @return mixed
      */
-    public function getServerPortByFd($fd){
+    protected function getServerPortByFd($fd){
         return $this->server->connection_info($fd)['server_port'];
     }
 
+	/**
+     * 包装SerevrMessageBody消息
+     * @param $type
+     * @param $message
+     * @param string $func
+     * @return string
+     */
+    public function packServerMessageBody($type, $message, string $func = null){
+        $data['type'] = $type;
+        $data['message'] = $message;
+        $data['func'] = $func;
+        return $data;
+    }
+	
     /**
      * 设置客户端连接为保护状态
 	 * 不被心跳线程切断。
@@ -319,7 +360,7 @@ abstract class Swoole{
     }
 	
     /**
-     * 发送数据
+     * 发送消息给fd
      * @param $fd
      * @param $data
      */
@@ -331,11 +372,92 @@ abstract class Swoole{
 		$pack = $this->getPack($this->getServerPortByFd($fd));
 		$pack_data = $pack->pack($data);
 		if($this->isWebSocket($fdinfo)){
-			return $this->server->push($fd, $pack_data);
+			$this->server->push($fd, $pack_data);
 		}else{
-			return $this->server->send($fd, $pack_data);
+			$this->server->send($fd, $pack_data);
 		}
     }
+    /**
+     * 发送消息给所有fd
+     * @param $data
+     */
+    public function sendToAllFd($data){
+		$send_data = $this->packServerMessageBody(SwooleMarco::MSG_TYPE_SEND_ALL_FD, ['data' => $data]);
+        if ($this->isTaskWorker()) {
+            $this->onSwooleTask($this->server, 0, 0, $send_data);
+        }else{
+            if ($this->task_num > 0) {
+                $this->server->task($send_data);
+            }else{
+                foreach ($this->server->connections as $fd) {
+                    $this->server->send($fd, $data, true);
+                }
+            }
+        }
+    }
+
+    /**
+     * 向uid发送消息
+     * @param $uid
+     * @param $data
+     */
+    public function sendToUid($uid, $data){
+        if ($this->uid_fd_table->exist($uid)) {//本机处理
+            $fd = $this->uid_fd_table->get($uid)['fd'];
+            return $this->send($fd, $data, true);
+		}else{
+			return null;
+		}
+    }
+	/**
+     * 批量给UID发送消息
+     * @param $uids uids
+     * @param $data 消息
+     */
+    public function sendToUids($uids, $data){
+        $current_fds = [];
+        foreach ($uids as $key => $uid) {
+            if ($this->uid_fd_table->exist($uid)) {
+                $current_fds[] = $this->uid_fd_table->get($uid)['fd'];
+                unset($uids[$key]);
+            }
+        }
+        if (count($current_fds) > $this->send_use_task_num && $this->task_num > 0) {
+			$send_data = $this->packServerMessageBody(SwooleMarco::MSG_TYPE_SEND_BATCH, ['data' => $data, 'fd' => $current_fds]);
+            if ($this->isTaskWorker()) {
+                $this->onSwooleTask($this->server, 0, 0, $send_data);
+            }elseif($this->isWorker()) {
+                $this->server->task($send_data);
+            }else{
+                foreach($current_fds as $fd) {
+                    $this->send($fd, $data, true);
+                }
+            }
+        }else{
+            foreach($current_fds as $fd) {
+                $this->send($fd, $data, true);
+            }
+        }
+    }
+	
+	/**
+     * 发送消息给所有Uid
+     * @param $data 需要发送的数据
+     */
+    public function sendToAllUid($data){
+        if ($this->isTaskWorker()) {
+            $this->onSwooleTask($this->server, 0, 0, $data);
+        } else {
+            if ($this->task_num > 0) {
+                $this->server->task($data);
+            } else {
+                foreach ($this->uid_fd_table as $row) {
+                    $this->send($row['fd'], $data);
+                }
+            }
+        }
+    }
+	
     /**
      * 服务器主动关闭链接
      * close fd
@@ -344,6 +466,7 @@ abstract class Swoole{
     public function close($fd){
         $this->server->close($fd);
     }
+	
     /**
      * 通过Uid获取fd
      * @param $uid
@@ -361,6 +484,7 @@ abstract class Swoole{
     public function getUidFromFd($fd){
         return $this->fd_uid_table->get($fd, 'uid');
     }
+	
 	/**
      * 将fd绑定到uid
 	 * uid不能为0

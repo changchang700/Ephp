@@ -7,7 +7,10 @@ namespace Server;
 use Server\SwooleWebSocketServer;
 use Components\Console\Console;
 class Server extends SwooleWebSocketServer{
-	//把整个实例保存起来，方便外部调用
+	/**
+	 *
+	 * @var Server
+	 */
 	public static $application=null;
 	
 	public function __construct() {
@@ -46,7 +49,7 @@ class Server extends SwooleWebSocketServer{
 	/**
 	 * APP启动前执行的
 	 */
-	public function beforeAppStart() {
+	protected function beforeAppStart() {
 		//检查服务状态
 		$this->checkAppStatus();
 	}
