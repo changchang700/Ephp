@@ -15,7 +15,9 @@ return [
 		'heartbeat_check_interval' => 60,//1分钟检测一次
 		'max_connection' => 100000,
 		'document_root' => __DIR__.'/../Views/',
-		'enable_static_handler' => true
+		'enable_static_handler' => true,
+//		'ssl_cert_file' => __DIR__.'/ssl.crt',
+//		'ssl_key_file' => __DIR__.'/ssl.key'
 	],
 	'server' => [
 		[

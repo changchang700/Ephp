@@ -8,5 +8,6 @@ class index extends Controller{
 	}
 	public function test(){
 		Server::$application->sendToAllFd("lllll");
+		var_dump(Server::$application->isWorker());
 	}
 }

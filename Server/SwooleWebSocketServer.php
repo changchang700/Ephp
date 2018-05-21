@@ -25,9 +25,17 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
             parent::start();
             return;
         }
+		$set = $this->getServerSet();
+		$socket_ssl = $set['ssl_cert_file'] ?? false;
+		
 		$first_server = $this->getFirstServer();
-        $this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port']);
-		$this->server->set($this->getServerSet());
+		
+		if ($socket_ssl) {
+			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port'],SWOOLE_PROCESS, SWOOLE_SOCK_TCP | SWOOLE_SSL);
+		} else {
+			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port']);
+		}
+		$this->server->set($set);
 		$this->server->on('Start', [$this, 'onSwooleStart']);
 		$this->server->on('WorkerStart', [$this, 'onSwooleWorkerStart']);
 		$this->server->on('Connect', [$this, 'onSwooleConnect']);
@@ -54,8 +62,14 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
         $this->beforeSwooleStart();
         $this->server->start();
     }
+	
+	public function onSwooleConnect($serv, $fd) {
+		parent::onSwooleConnect($serv, $fd);
+		$num = count($this->server->connections);
+		echo "总共连接{$num}个\n";
+	}
 
-    /**
+	/**
      * websocket连接上时
      * @param $server
      * @param $request

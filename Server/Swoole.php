@@ -14,7 +14,12 @@ abstract class Swoole{
      * @var string
      */
     public $name = 'Ephp';
-    /**
+	/**
+	 * workerid
+	 * @var type 
+	 */
+	public $workerId;
+	/**
      * worker数量
      * @var int
      */
@@ -164,9 +169,14 @@ abstract class Swoole{
     protected function addServer($first_port){
         foreach ($this->port_confit as $value) {
             if ($value['socket_port'] == $first_port) continue;
-			$set = [];
+			$set = $this->getServerSet();
+            $socket_ssl = $set['ssl_cert_file'] ?? false;
             if ($value['socket_type'] == self::SOCK_HTTP || $value['socket_type'] == self::SOCK_WS) {
-                $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP);
+				if ($socket_ssl) {
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | self::SWOOLE_SSL);
+                } else {
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP);
+                }
                 if($port == false) {
                     throw new \Exception("{$value['socket_port']}端口创建失败");
                 }
@@ -188,7 +198,11 @@ abstract class Swoole{
                     $port->on('Handshake', [$this, $value['handshake'] ?? 'onSwooleWSHandShake']);
                 }
             }else{
-                $port = $this->server->listen($value['socket_name'], $value['socket_port'], $value['socket_type']);
+                if ($socket_ssl) {
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | self::SWOOLE_SSL);
+                } else {
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP);
+                }
                 if($port == false){
                     throw new \Exception("{$value['socket_port']}端口创建失败");
                 }
@@ -332,7 +346,7 @@ abstract class Swoole{
      * @param $fd
      * @return mixed
      */
-    protected function getServerPortByFd($fd){
+    public function getServerPortByFd($fd){
         return $this->server->connection_info($fd)['server_port'];
     }
 

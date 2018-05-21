@@ -16,8 +16,15 @@ abstract class SwooleServer extends Swoole{
 	 * 服务启动
 	 */
     public function start(){
+		$set = $this->getServerSet();
+		$socket_ssl = $set['ssl_cert_file'] ?? false;
+		
 		$first_server = $this->getFirstServer();
-        $this->server = new swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_type']);
+		if ($socket_ssl) {
+			$this->server = new \swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_type'] | SWOOLE_SSL);
+		} else {
+			$this->server = new \swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_type']);
+		}
 		$this->server->set($this->getServerSet());
 		$this->server->on('Start', [$this, 'onSwooleStart']);
 		$this->server->on('WorkerStart', [$this, 'onSwooleWorkerStart']);
@@ -55,6 +62,14 @@ abstract class SwooleServer extends Swoole{
      * @param $workerId
      */
     public function onSwooleWorkerStart($serv, $workerId){
+		$this->workerId = $workerId;
+		 //清除apc缓存
+        if (function_exists('apc_clear_cache')) {
+            apc_clear_cache();
+        }
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+        }
 		if (!$serv->taskworker) {
 			swoole_set_process_name($this->name . '-Worker');
         } else {

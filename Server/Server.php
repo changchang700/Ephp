@@ -49,7 +49,7 @@ class Server extends SwooleWebSocketServer{
 	/**
 	 * APP启动前执行的
 	 */
-	protected function beforeAppStart() {
+	private function beforeAppStart() {
 		//检查服务状态
 		$this->checkAppStatus();
 	}
