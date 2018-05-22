@@ -36,6 +36,17 @@ return [
 			'socket_protocol' => SWOOLE_SOCK_TCP,
 			'name' => 'server',
 			'socket_name' => '0.0.0.0',
+			'socket_port' => 9099,
+			'pack_tool' => 'JsonPack',
+			'route_tool' => 'NormalRoute',
+			'max_connection' => 65535,
+			'status' => 'start'
+		],
+		[
+			'socket_type' => Swoole::socket_server,
+			'socket_protocol' => SWOOLE_SOCK_TCP,
+			'name' => 'server',
+			'socket_name' => '0.0.0.0',
 			'socket_port' => 9094,
 			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',

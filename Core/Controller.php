@@ -1,7 +1,6 @@
 <?php
 namespace Core;
 
-use Core\Core;
 class Controller{
 	/**
 	 * 使用TCP WEBSOCKET协议
@@ -41,6 +40,5 @@ class Controller{
         $this->client_data = null;
         $this->request = null;
         $this->response = null;
-        Core::getInstance()->revertController($this);
     }
 }

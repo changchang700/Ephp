@@ -42,7 +42,7 @@ abstract class Swoole{
 	 * swoole server 实例
 	 * @var type 
 	 */
-    public $server;
+    public $server = null;
 	/**
 	 * 是否进程守护
 	 * @var type 
@@ -285,6 +285,10 @@ abstract class Swoole{
 			return $pack;
 		}
     }
+	
+	
+	
+	
 	
 	/**
      * 获取workerId

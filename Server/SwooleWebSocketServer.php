@@ -62,12 +62,6 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
         $this->beforeSwooleStart();
         $this->server->start();
     }
-	
-	public function onSwooleConnect($serv, $fd) {
-		parent::onSwooleConnect($serv, $fd);
-		$num = count($this->server->connections);
-		echo "总共连接{$num}个\n";
-	}
 
 	/**
      * websocket连接上时
@@ -113,6 +107,8 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * @return bool
      */
     public function onSwooleWSHandShake(\swoole_http_request $request, \swoole_http_response $response){
+		//此处可以设置用户的验证代码，是否连接
+		
 		// websocket握手连接算法验证
 		$secWebSocketKey = $request->header['sec-websocket-key'];
 		$patten = '#^[+/0-9A-Za-z]{21}[AQgw]==$#';
