@@ -25,8 +25,7 @@ class Console{
 		echo self::colorFont("TYPE",34).str_repeat(" ",13).self::colorFont("ADDRSS",34).str_repeat(" ",13).self::colorFont("PORT",34).str_repeat(" ",13).self::colorFont("STATUS",34)."\n";
 		echo str_repeat("-", self::$lengh)."\n";
 		foreach (Server::$application->config['server'] as $value) {
-			$type = ($value['socket_type']==1)?"TCP":(($value['socket_type']==10)?"HTTP":(($value['socket_type']==11)?"WS":"NONE"));
-			echo $type. str_repeat(" ", 17- strlen($type)).$value['socket_name'].str_repeat(" ", 19- strlen($value['socket_name'])).$value['socket_port'].str_repeat(" ", 17- strlen($value['socket_port'])).self::colorFont("[start]",32)."\n";
+			echo $value['name']. str_repeat(" ", 17- strlen($value['name'])).$value['socket_name'].str_repeat(" ", 19- strlen($value['socket_name'])).$value['socket_port'].str_repeat(" ", 17- strlen($value['socket_port'])).($value['status']=='start'?self::colorFont("[{$value['status']}]",32):self::colorFont("[{$value['status']}]",31))."\n";
 		}
 		echo str_repeat("-", self::$lengh)."\n";
 		echo str_repeat(" ", (self::$lengh-strlen(self::$after_start_info))/2).self::colorFont(self::$after_start_info,32).str_repeat(" ", (self::$lengh-strlen(self::$after_start_info))/2)."\n";

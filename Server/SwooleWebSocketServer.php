@@ -31,9 +31,9 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
 		$first_server = $this->getFirstServer();
 		
 		if ($socket_ssl) {
-			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port'],SWOOLE_PROCESS, SWOOLE_SOCK_TCP | SWOOLE_SSL);
+			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol'] | SWOOLE_SSL);
 		} else {
-			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port']);
+			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol']);
 		}
 		$this->server->set($set);
 		$this->server->on('Start', [$this, 'onSwooleStart']);

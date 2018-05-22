@@ -1,10 +1,19 @@
 <?php
+/**
+ * 整个应用服务基类
+ * 此类执行swoole启动前的初始化操作
+ * @author Mumu
+ * @link https://www.alilinet.com
+ */
 namespace Server;
 
 use Core\Config;
 
 use Components\Marco\SwooleMarco;
 abstract class Swoole{
+	const socket_server = 1;
+	const socket_http_server = 2;
+	const socket_ws_server = 3;
     /**
      * 应用版本
      */
@@ -39,18 +48,6 @@ abstract class Swoole{
 	 * @var type 
 	 */
 	public $daemonize;
-	/**
-	 * swoole tcp
-	 */
-	const SOCK_TCP = 1;
-	/**
-	 * swoole http
-	 */
-    const SOCK_HTTP = 10;
-	/**
-	 * swoole websocket
-	 */
-    const SOCK_WS = 11;
 	/**
 	 * 是否开启tcp服务
 	 * @var type 
@@ -117,12 +114,12 @@ abstract class Swoole{
 		$this->daemonize = $this->config['set']['daemonize'];
 		//设置端口配置
 		$port_config_before = $this->config['server'];
-		foreach ($port_config_before as $value) {
-            if ($value['socket_type'] == self::SOCK_WS) {
+		foreach($port_config_before as $value){
+            if($value['socket_type'] == self::socket_ws_server){
                 $this->enable_swoole_websocket_erver = true;
-            } else if ($value['socket_type'] == self::SOCK_HTTP) {
+            }elseif($value['socket_type'] == self::socket_http_server) {
                 $this->enable_swoole_http_erver = true;
-            } else {
+            }else{
                 $this->enable_swoole_tcp_server = true;
             }
 			$port_config_after[$value['socket_port']] = $value;
@@ -169,18 +166,20 @@ abstract class Swoole{
     protected function addServer($first_port){
         foreach ($this->port_confit as $value) {
             if ($value['socket_port'] == $first_port) continue;
+			if($value['status'] == 'stop') continue;
+			//获取配置参数
 			$set = $this->getServerSet();
             $socket_ssl = $set['ssl_cert_file'] ?? false;
-            if ($value['socket_type'] == self::SOCK_HTTP || $value['socket_type'] == self::SOCK_WS) {
+            if ($value['socket_type'] == self::socket_http_server || $value['socket_type'] == self::socket_ws_server) {
 				if ($socket_ssl) {
-                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | SWOOLE_SSL);
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], $value['socket_protocol'] | SWOOLE_SSL);
                 } else {
-                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP);
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], $value['socket_protocol']);
                 }
                 if($port == false) {
                     throw new \Exception("{$value['socket_port']}端口创建失败");
                 }
-                if($value['socket_type'] == self::SOCK_HTTP){
+                if($value['socket_type'] == self::socket_http_server){
                     $set['open_http_protocol'] = true;
 					
                     $port->set($set);
@@ -199,9 +198,9 @@ abstract class Swoole{
                 }
             }else{
                 if ($socket_ssl) {
-                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | SWOOLE_SSL);
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], $value['socket_protocol'] | SWOOLE_SSL);
                 } else {
-                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP);
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], $value['socket_protocol']);
                 }
                 if($port == false){
                     throw new \Exception("{$value['socket_port']}端口创建失败");
@@ -221,11 +220,11 @@ abstract class Swoole{
 	 */
 	protected function getFirstServer(){
         if ($this->enable_swoole_websocket_erver) {
-            $type = self::SOCK_WS;
+            $type = self::socket_ws_server;
         } else if ($this->enable_swoole_http_erver) {
-            $type = self::SOCK_HTTP;
+            $type = self::socket_http_server;
         } else {
-            $type = self::SOCK_TCP;
+            $type = self::socket_server;
         }
         foreach ($this->port_confit as $value) {
             if ($value['socket_type'] == $type) {
@@ -357,7 +356,7 @@ abstract class Swoole{
      * @param string $func
      * @return string
      */
-    public function packServerMessageBody($type, $message, string $func = null){
+    public function packServerMessageBody($type, $message, $func = null){
         $data['type'] = $type;
         $data['message'] = $message;
         $data['func'] = $func;
