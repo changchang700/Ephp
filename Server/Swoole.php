@@ -173,7 +173,7 @@ abstract class Swoole{
             $socket_ssl = $set['ssl_cert_file'] ?? false;
             if ($value['socket_type'] == self::SOCK_HTTP || $value['socket_type'] == self::SOCK_WS) {
 				if ($socket_ssl) {
-                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | self::SWOOLE_SSL);
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | SWOOLE_SSL);
                 } else {
                     $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP);
                 }
@@ -199,7 +199,7 @@ abstract class Swoole{
                 }
             }else{
                 if ($socket_ssl) {
-                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | self::SWOOLE_SSL);
+                    $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP | SWOOLE_SSL);
                 } else {
                     $port = $this->server->listen($value['socket_name'], $value['socket_port'], self::SOCK_TCP);
                 }
