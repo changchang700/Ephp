@@ -26,9 +26,14 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
             return;
         }
 		$set = $this->getServerSet();
-		$socket_ssl = $set['ssl_cert_file'] ?? false;
-		
 		$first_server = $this->getFirstServer();
+		
+		if(array_key_exists('ssl_cert_file', $first_server) && array_key_exists('ssl_key_file', $first_server)){
+			$set['ssl_cert_file'] = $first_server['ssl_cert_file'];
+			$set['ssl_key_file'] = $first_server['ssl_key_file'];
+		}
+		
+		$socket_ssl = $set['ssl_cert_file'] ?? false;
 		
 		if ($socket_ssl) {
 			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol'] | SWOOLE_SSL);
@@ -54,9 +59,9 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
 		$this->server->on('Packet', [$this, 'onSwoolePacket']);
 		$this->server->on('Shutdown', [$this, 'onSwooleShutdown']);
 		//websocket独有的回调
-		$this->server->on('Open', [$this, 'onSwooleWSOpen']);
-		$this->server->on('Message', [$this, 'onSwooleWSMessage']);
-		$this->server->on('HandShake', [$this, 'onSwooleWSHandShake']);
+		$this->server->on('Open', [$this, 'onSwooleOpen']);
+		$this->server->on('Message', [$this, 'onSwooleMessage']);
+		$this->server->on('HandShake', [$this, 'onSwooleHandShake']);
 		
 		$this->addServer($first_server['socket_port']);
         $this->beforeSwooleStart();
@@ -68,7 +73,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * @param $server
      * @param $request
      */
-    public function onSwooleWSOpen($server, $request){
+    public function onSwooleOpen($server, $request){
 		
     }
 
@@ -77,7 +82,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * @param $server
      * @param $frame
      */
-    public function onSwooleWSMessage($server, $frame){
+    public function onSwooleMessage($server, $frame){
 		//解析封包
 		$pack = $this->getPack($this->getServerPortByFd($frame->fd));
 		try {
@@ -106,7 +111,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * @param $response
      * @return bool
      */
-    public function onSwooleWSHandShake(\swoole_http_request $request, \swoole_http_response $response){
+    public function onSwooleHandShake(\swoole_http_request $request, \swoole_http_response $response){
 		//此处可以设置用户的验证代码，是否连接
 		
 		// websocket握手连接算法验证

@@ -3,7 +3,6 @@ namespace Server;
 
 use Server\SwooleServer;
 use Core\Core;
-use Components\Marco\SwooleMarco;
 abstract class SwooleHttpServer extends SwooleServer{
     public function __construct(){
 		parent::__construct();
@@ -17,10 +16,15 @@ abstract class SwooleHttpServer extends SwooleServer{
             parent::start();
             return;
         }
-		$set = $this->getServerSet();
+		$set = $this->getServerSet();		
+		$first_server = $this->getFirstServer();
+		
+		if(array_key_exists('ssl_cert_file', $first_server) && array_key_exists('ssl_key_file', $first_server)){
+			$set['ssl_cert_file'] = $first_server['ssl_cert_file'];
+			$set['ssl_key_file'] = $first_server['ssl_key_file'];
+		}
 		$socket_ssl = $set['ssl_cert_file'] ?? false;
 		
-		$first_server = $this->getFirstServer();
 		if ($socket_ssl) {
             $this->server = new \swoole_http_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol'] | SWOOLE_SSL);
         } else {
@@ -66,7 +70,7 @@ abstract class SwooleHttpServer extends SwooleServer{
 			$controller_name = $route->getControllerName();
 			$method_name = $route->getMethodName();
 			$client_data = null;
-			Core::getInstance()->run($controller_name,$method_name,$client_data,$request, $response);
+			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
 		} catch (\Exception $e){
 			$route->errorHttpHandle($e, $request, $response);
 		}

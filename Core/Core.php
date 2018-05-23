@@ -13,7 +13,7 @@ class Core{
 
     /**
      * 获取单例
-     * @return ControllerFactory
+     * @return Core
      */
     public static function getInstance(){
         if (self::$instance == null) {

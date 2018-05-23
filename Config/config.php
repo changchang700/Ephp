@@ -14,10 +14,9 @@ return [
 		'heartbeat_idle_time' => 120, //2分钟后没消息自动释放连接
 		'heartbeat_check_interval' => 60, //1分钟检测一次
 		'max_connection' => 100000,
+		'max_request' => 100,
 		'document_root' => __DIR__.'/../Views/',
-		'enable_static_handler' => true,
-		'ssl_cert_file' => __DIR__.'/ssl.pem',
-		'ssl_key_file' => __DIR__.'/ssl.key'
+		'enable_static_handler' => true
 	],
 	'server' => [
 		[
@@ -40,6 +39,8 @@ return [
 			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535,
+			'ssl_cert_file' => __DIR__.'/ssl.pem',
+			'ssl_key_file' => __DIR__.'/ssl.key',
 			'status' => 'start'
 		],
 		[
@@ -51,6 +52,8 @@ return [
 			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535,
+			'ssl_cert_file' => __DIR__.'/ssl.pem',
+			'ssl_key_file' => __DIR__.'/ssl.key',
 			'status' => 'start'
 		],
 		[
@@ -62,6 +65,8 @@ return [
 			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535,
+			'ssl_cert_file' => __DIR__.'/ssl.pem',
+			'ssl_key_file' => __DIR__.'/ssl.key',
 			'status' => 'start'
 		],
 		[
@@ -84,6 +89,8 @@ return [
 			'pack_tool' => 'JsonPack',
 			'route_tool' => 'NormalRoute',
 			'max_connection' => 65535,
+			'ssl_cert_file' => __DIR__.'/ssl.pem',
+			'ssl_key_file' => __DIR__.'/ssl.key',
 			'status' => 'start'
 		],
 		[

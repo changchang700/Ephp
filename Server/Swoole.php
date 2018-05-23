@@ -11,8 +11,20 @@ use Core\Config;
 
 use Components\Marco\SwooleMarco;
 abstract class Swoole{
+	/**
+	 * socket类型
+	 * socket_server
+	 */
 	const socket_server = 1;
+	/**
+	 * socket类型
+	 * socket_http_server
+	 */
 	const socket_http_server = 2;
+	/**
+	 * socket类型
+	 * socket_ws_server
+	 */
 	const socket_ws_server = 3;
     /**
      * 应用版本
@@ -72,7 +84,7 @@ abstract class Swoole{
 	 * 端口配置
 	 * @var type 
 	 */
-	public $port_confit;
+	public $port_config;
 	/**
 	 * 端口对应到路由
 	 * @var type 
@@ -124,7 +136,7 @@ abstract class Swoole{
             }
 			$port_config_after[$value['socket_port']] = $value;
         }
-		$this->port_confit = $port_config_after;
+		$this->port_config = $port_config_after;
 	}
 	
     /**
@@ -164,11 +176,15 @@ abstract class Swoole{
 	 * @throws \Exception
 	 */
     protected function addServer($first_port){
-        foreach ($this->port_confit as $value) {
+        foreach ($this->port_config as $value) {
             if ($value['socket_port'] == $first_port) continue;
 			if($value['status'] == 'stop') continue;
 			//获取配置参数
 			$set = $this->getServerSet();
+			if(array_key_exists('ssl_cert_file', $value) && array_key_exists('ssl_key_file', $value)){
+				$set['ssl_cert_file'] = $value['ssl_cert_file'];
+				$set['ssl_key_file'] = $value['ssl_key_file'];
+			}
             $socket_ssl = $set['ssl_cert_file'] ?? false;
             if ($value['socket_type'] == self::socket_http_server || $value['socket_type'] == self::socket_ws_server) {
 				if ($socket_ssl) {
@@ -192,9 +208,9 @@ abstract class Swoole{
                     $set['open_websocket_protocol'] = true;
                     $port->set($set);
 					
-                    $port->on('Open', [$this, $value['open'] ?? 'onSwooleWSOpen']);
-                    $port->on('Message', [$this, $value['message'] ?? 'onSwooleWSMessage']);
-                    $port->on('Handshake', [$this, $value['handshake'] ?? 'onSwooleWSHandShake']);
+                    $port->on('Open', [$this, $value['open'] ?? 'onSwooleOpen']);
+                    $port->on('Message', [$this, $value['message'] ?? 'onSwooleMessage']);
+                    $port->on('Handshake', [$this, $value['handshake'] ?? 'onSwooleHandShake']);
                 }
             }else{
                 if ($socket_ssl) {
@@ -226,7 +242,7 @@ abstract class Swoole{
         } else {
             $type = self::socket_server;
         }
-        foreach ($this->port_confit as $value) {
+        foreach ($this->port_config as $value) {
             if ($value['socket_type'] == $type) {
                 return $value;
             }
@@ -243,7 +259,7 @@ abstract class Swoole{
 		if(isset($this->routes[$server_port])){
 			return $this->routes[$server_port];
 		}else{
-			$route_tool = $this->port_confit[$server_port]['route_tool'];
+			$route_tool = $this->port_config[$server_port]['route_tool'];
 			if (class_exists($route_tool)) {
 				$route = new $route_tool;
 				$this->routes[$server_port] = $route;
@@ -262,14 +278,14 @@ abstract class Swoole{
 	/**
 	 * 获取封包类
 	 * @param type $server_port
-	 * @return \Server\pack_tool|\Server\pack_class_name
+	 * @return JsonPack
 	 * @throws \Exception
 	 */
     protected function getPack($server_port){
 		if(isset($this->packs[$server_port])){
 			return $this->packs[$server_port];
 		}else{
-			$pack_tool = $this->port_confit[$server_port]['pack_tool'];
+			$pack_tool = $this->port_config[$server_port]['pack_tool'];
 			if (class_exists($pack_tool)) {
 				$pack = new $pack_tool;
 				$this->packs[$server_port] = $pack;
@@ -385,13 +401,17 @@ abstract class Swoole{
         if (!$this->server->exist($fd)) {
             return null;
         }
-		$fdinfo = $this->getFdInfo($fd);
-		$pack = $this->getPack($this->getServerPortByFd($fd));
+		$server_port = $this->getServerPortByFd($fd);
+		$server_info = $this->port_config[$server_port];
+		
+		$pack = $this->getPack($server_port);
 		$pack_data = $pack->pack($data);
-		if($this->isWebSocket($fdinfo)){
-			$this->server->push($fd, $pack_data);
-		}else{
-			$this->server->send($fd, $pack_data);
+		if($server_info['socket_type']==self::socket_ws_server){
+			return $this->server->push($fd, $pack_data);
+		}elseif($server_info['socket_type']==self::socket_server){
+			return $this->server->send($fd, $pack_data);
+		}elseif($server_info['socket_type']==self::socket_http_server){
+			return;
 		}
     }
     /**

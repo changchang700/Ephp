@@ -17,9 +17,15 @@ abstract class SwooleServer extends Swoole{
 	 */
     public function start(){
 		$set = $this->getServerSet();
+		$first_server = $this->getFirstServer();
+		
+		if(array_key_exists('ssl_cert_file', $first_server) && array_key_exists('ssl_key_file', $first_server)){
+			$set['ssl_cert_file'] = $first_server['ssl_cert_file'];
+			$set['ssl_key_file'] = $first_server['ssl_key_file'];
+		}
+		
 		$socket_ssl = $set['ssl_cert_file'] ?? false;
 		
-		$first_server = $this->getFirstServer();
 		if ($socket_ssl) {
 			$this->server = new \swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol'] | SWOOLE_SSL);
 		} else {
@@ -167,7 +173,7 @@ abstract class SwooleServer extends Swoole{
                 return null;
             case SwooleMarco::MSG_TYPE_SEND_ALL_FD;//发送广播
                 foreach ($serv->connections as $fd) {
-                    $serv->send($fd, $message['data'], true);
+                    $this->send($fd, $message['data']);
                 }
                 return null;
         }
