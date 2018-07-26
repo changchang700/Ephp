@@ -39,39 +39,39 @@ class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
     public static $prefixDirsPsr4 = array (
         'Views\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Views',
+            0 => __DIR__ . '/../..' . '/views',
         ),
         'Server\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Server',
+            0 => __DIR__ . '/../..' . '/server',
         ),
         'Route\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Route',
+            0 => __DIR__ . '/../..' . '/route',
         ),
         'Pack\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Pack',
+            0 => __DIR__ . '/../..' . '/pack',
         ),
         'Models\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Models',
+            0 => __DIR__ . '/../..' . '/models',
         ),
         'Core\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Core',
+            0 => __DIR__ . '/../..' . '/core',
         ),
         'Controllers\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Controllers',
+            0 => __DIR__ . '/../..' . '/controllers',
         ),
         'Config\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Config',
+            0 => __DIR__ . '/../..' . '/config',
         ),
         'Components\\' => 
         array (
-            0 => __DIR__ . '/../..' . '/Components',
+            0 => __DIR__ . '/../..' . '/components',
         ),
     );
 
