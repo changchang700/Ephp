@@ -24,7 +24,7 @@ class Config{
 	}
 	
 	public function __construct() {
-		$this->config = include __DIR__.'/../Config/config.php';
+		$this->config = include __DIR__.'/../config/config.php';
 	}
 
 	/**

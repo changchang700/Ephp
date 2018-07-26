@@ -5,7 +5,7 @@
 namespace Server;
 
 use Server\SwooleWebSocketServer;
-use Components\Console\Console;
+use Components\console\Console;
 class Server extends SwooleWebSocketServer{
 	/**
 	 *
