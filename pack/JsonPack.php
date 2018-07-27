@@ -1,14 +1,15 @@
 <?php
 namespace Pack;
 
-use Components\Console\Console;
 use Server\Server;
+use Pack\IPack;
+
 class JsonPack implements IPack{
     protected $last_data;
     protected $last_data_result;
 
 
-    public function pack($data, $topic = null){
+    public function pack($data){
         if ($this->last_data != null && $this->last_data == $data) {
             return $this->last_data_result;
         }
@@ -34,7 +35,7 @@ class JsonPack implements IPack{
     }
 
     public function getProbufSet(){
-        return null;
+        return [];
     }
 
     public function errorHandle($e, $fd){

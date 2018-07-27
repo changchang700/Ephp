@@ -8,7 +8,6 @@
 namespace Server;
 
 use Core\Config;
-
 use Components\Marco\SwooleMarco;
 abstract class Swoole{
 	/**
@@ -160,6 +159,7 @@ abstract class Swoole{
         $this->fd_uid_table->create();
     }
 	/**
+	 * 获取常规设置参数
 	 * 设置swoole set配置参数
 	 * @return type 返回配置参数
 	 */
@@ -181,11 +181,15 @@ abstract class Swoole{
 			if($value['status'] == 'stop') continue;
 			//获取配置参数
 			$set = $this->getServerSet();
+			
+			$socket_ssl = false;
 			if(array_key_exists('ssl_cert_file', $value) && array_key_exists('ssl_key_file', $value)){
 				$set['ssl_cert_file'] = $value['ssl_cert_file'];
 				$set['ssl_key_file'] = $value['ssl_key_file'];
+				
+				$socket_ssl = true;
 			}
-            $socket_ssl = $set['ssl_cert_file'] ?? false;
+            
             if ($value['socket_type'] == self::socket_http_server || $value['socket_type'] == self::socket_ws_server) {
 				if ($socket_ssl) {
                     $port = $this->server->listen($value['socket_name'], $value['socket_port'], $value['socket_protocol'] | SWOOLE_SSL);
@@ -198,7 +202,12 @@ abstract class Swoole{
                 if($value['socket_type'] == self::socket_http_server){
                     $set['open_http_protocol'] = true;
 					
-                    $port->set($set);
+                    $buf_set  = $this->getProbufSet($value['socket_port']);
+		
+					$final_set = array_merge($set,$buf_set);
+
+					$port->set($final_set);
+					
                     $port->on('Request', [$this, $value['request'] ?? 'onSwooleRequest']);
                     $port->on('Handshake', function (){
                         return false;
@@ -206,7 +215,12 @@ abstract class Swoole{
                 }else{
                     $set['open_http_protocol'] = true;
                     $set['open_websocket_protocol'] = true;
-                    $port->set($set);
+					
+					$buf_set  = $this->getProbufSet($value['socket_port']);
+		
+					$final_set = array_merge($set,$buf_set);
+
+					$port->set($final_set);
 					
                     $port->on('Open', [$this, $value['open'] ?? 'onSwooleOpen']);
                     $port->on('Message', [$this, $value['message'] ?? 'onSwooleMessage']);
@@ -221,7 +235,12 @@ abstract class Swoole{
                 if($port == false){
                     throw new \Exception("{$value['socket_port']}端口创建失败");
                 }
-                $port->set($set);
+                
+				$buf_set  = $this->getProbufSet($value['socket_port']);
+		
+				$final_set = array_merge($set,$buf_set);
+
+				$port->set($final_set);
 				
                 $port->on('Connect', [$this, $value['connect'] ?? 'onSwooleConnect']);
                 $port->on('Receive', [$this, $value['receive'] ?? 'onSwooleReceive']);
@@ -230,8 +249,23 @@ abstract class Swoole{
             }
         }
     }
+	
+	/**
+	 * 获取协议的包头设置参数
+	 * @param type $port
+	 * @return type
+	 */
+	public function getProbufSet($port)
+    {
+		$set = $this->getPack($port);
+        if ($set == null) {
+            return [];
+        }
+        return $set->getProbufSet();
+    }
 	/**
 	 * 获取第一个服务
+	 * 及其类型
 	 * @return type
 	 */
 	protected function getFirstServer(){

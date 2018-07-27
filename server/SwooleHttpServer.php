@@ -12,6 +12,7 @@ abstract class SwooleHttpServer extends SwooleServer{
      * 启动
      */
     public function start(){
+		//如果没有启动http服务则启动上层服务
 		if (!$this->enable_swoole_http_erver) {
             parent::start();
             return;
@@ -19,18 +20,25 @@ abstract class SwooleHttpServer extends SwooleServer{
 		$set = $this->getServerSet();		
 		$first_server = $this->getFirstServer();
 		
+		$socket_ssl = false;
 		if(array_key_exists('ssl_cert_file', $first_server) && array_key_exists('ssl_key_file', $first_server)){
 			$set['ssl_cert_file'] = $first_server['ssl_cert_file'];
 			$set['ssl_key_file'] = $first_server['ssl_key_file'];
+			
+			$socket_ssl = true;
 		}
-		$socket_ssl = $set['ssl_cert_file'] ?? false;
 		
 		if ($socket_ssl) {
             $this->server = new \swoole_http_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol'] | SWOOLE_SSL);
         } else {
             $this->server = new \swoole_http_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol']);
         }
-        $this->server->set($set);
+		
+		$buf_set  = $this->getProbufSet($first_server['socket_port']);
+		
+		$final_set = array_merge($set,$buf_set);
+		
+		$this->server->set($final_set);
 		$this->server->on('Start', [$this, 'onSwooleStart']);
 		$this->server->on('WorkerStart', [$this, 'onSwooleWorkerStart']);
 		$this->server->on('Connect', [$this, 'onSwooleConnect']);

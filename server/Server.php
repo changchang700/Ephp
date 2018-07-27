@@ -1,23 +1,39 @@
 <?php
 /**
- * 本文件为整个系统入口文件
+ * server类，本类继承SwooleWebSocketServer类
+ * 本类也是最终类，无法被继承
+ * @author Mumu <2107898148@qq.com>
+ * @date 2018年7月26日
+ * @time 15:11:28
  */
 namespace Server;
 
 use Server\SwooleWebSocketServer;
-use Components\console\Console;
-class Server extends SwooleWebSocketServer{
+use Components\Console\Console;
+
+/**
+ * server类
+ */
+final class Server extends SwooleWebSocketServer{
 	/**
-	 *
+	 * 保存整个server实例
+	 * 方便调用
 	 * @var Server
 	 */
 	public static $application=null;
 	
+	/**
+	 * 构造函数
+	 * 把整个实例保存到$application
+	 */
 	public function __construct() {
 		parent::__construct();
-		self::$application = &$this;
+		self::$application = $this;
 	}
-	
+	/**
+	 * 根据输入命令执行指令
+	 * @global type $argv
+	 */
 	public function run(){
 		global $argv;
 		$command = $argv[1] ?? "";
