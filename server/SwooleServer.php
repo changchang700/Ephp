@@ -4,6 +4,7 @@ namespace Server;
 use Core\Core;
 use Server\Swoole;
 use Components\Marco\SwooleMarco;
+
 abstract class SwooleServer extends Swoole{
 	/**
      * SwooleServer constructor.
@@ -16,8 +17,9 @@ abstract class SwooleServer extends Swoole{
 	 * 服务启动
 	 */
     public function start(){
-		$set = $this->getServerSet();
+		
 		$first_server = $this->getFirstServer();
+		$set = $this->getServerSet($first_server['socket_port']);
 		
 		$socket_ssl = false;
 		if(array_key_exists('ssl_cert_file', $first_server) && array_key_exists('ssl_key_file', $first_server)){
@@ -33,11 +35,7 @@ abstract class SwooleServer extends Swoole{
 			$this->server = new \swoole_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol']);
 		}
 		
-		$buf_set  = $this->getProbufSet($first_server['socket_port']);
-		
-		$final_set = array_merge($set,$buf_set);
-		
-		$this->server->set($final_set);
+		$this->server->set($set);
 		$this->server->on('Start', [$this, 'onSwooleStart']);
 		$this->server->on('WorkerStart', [$this, 'onSwooleWorkerStart']);
 		$this->server->on('Connect', [$this, 'onSwooleConnect']);
@@ -95,7 +93,14 @@ abstract class SwooleServer extends Swoole{
      * @param $fd
      */
     public function onSwooleConnect($serv, $fd){
-		
+		if($this->getSocketTypeByFd($fd)!==Swoole::socket_http_server){
+			$controller_name = $this->config['event_controller'];
+			$method_name = $this->config['event_connect_method'];
+			$client_data = null;
+			$request = null;
+			$response = null;
+			Core::getInstance()->run($controller_name, $method_name, $fd, $client_data, $request, $response);
+		}
     }
 
     /**
@@ -123,12 +128,11 @@ abstract class SwooleServer extends Swoole{
 			$method_name = $route->getMethodName();
 			$request = null;
 			$response = null;
-			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
+			Core::getInstance()->run($controller_name,$method_name,$fd,$client_data,$request,$response);
 		} catch (\Exception $e){
 			return $route->errorHandle($e, $fd);
 		}
     }
-	
 
     /**
      * onSwooleClose
@@ -136,7 +140,14 @@ abstract class SwooleServer extends Swoole{
      * @param $fd
      */
     public function onSwooleClose($serv, $fd){
-		
+		if($this->getSocketTypeByFd($fd)!==Swoole::socket_http_server){
+			$controller_name = $this->config['event_controller'];
+			$method_name = $this->config['event_close_method'];
+			$client_data = null;
+			$request = null;
+			$response = null;
+			Core::getInstance()->run($controller_name, $method_name, $fd, $client_data, $request, $response);
+		}
     }
 
     /**
@@ -173,12 +184,12 @@ abstract class SwooleServer extends Swoole{
                     $this->send($fd, $message['data'], true);
                 }
                 return null;
-            case SwooleMarco::MSG_TYPE_SEND_ALL://发送广播
+            case SwooleMarco::MSG_TYPE_SEND_ALL://发送UID
                 foreach ($this->uid_fd_table as $row) {
                     $this->send($row['fd'], $message['data'], true);
                 }
                 return null;
-            case SwooleMarco::MSG_TYPE_SEND_ALL_FD;//发送广播
+            case SwooleMarco::MSG_TYPE_SEND_ALL_FD;//发送FD
                 foreach ($serv->connections as $fd) {
                     $this->send($fd, $message['data']);
                 }

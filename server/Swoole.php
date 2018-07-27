@@ -16,12 +16,12 @@ abstract class Swoole{
 	 */
 	const socket_server = 1;
 	/**
-	 * socket类型
+	 * http类型
 	 * socket_http_server
 	 */
 	const socket_http_server = 2;
 	/**
-	 * socket类型
+	 * websocket类型
 	 * socket_ws_server
 	 */
 	const socket_ws_server = 3;
@@ -159,15 +159,19 @@ abstract class Swoole{
         $this->fd_uid_table->create();
     }
 	/**
-	 * 获取常规设置参数
-	 * 设置swoole set配置参数
-	 * @return type 返回配置参数
+	 * 获取端口配置选项
+	 * @param type $port 相应的端口
+	 * @return type
 	 */
-    protected function getServerSet(){
+    protected function getServerSet($port){
         $set = $this->config['set'];
 		//根据命令行设置的-d参数是否启动进程守护
 		$set['daemonize'] = $this->daemonize;
-		return $set;
+		if($port){
+			return array_merge($set,$this->getProbufSet($port));
+		}else{
+			return $set;
+		}
     }
 	
 	/**
@@ -180,7 +184,7 @@ abstract class Swoole{
             if ($value['socket_port'] == $first_port) continue;
 			if($value['status'] == 'stop') continue;
 			//获取配置参数
-			$set = $this->getServerSet();
+			$set = $this->getServerSet($value['socket_port']);
 			
 			$socket_ssl = false;
 			if(array_key_exists('ssl_cert_file', $value) && array_key_exists('ssl_key_file', $value)){
@@ -202,12 +206,7 @@ abstract class Swoole{
                 if($value['socket_type'] == self::socket_http_server){
                     $set['open_http_protocol'] = true;
 					
-                    $buf_set  = $this->getProbufSet($value['socket_port']);
-		
-					$final_set = array_merge($set,$buf_set);
-
-					$port->set($final_set);
-					
+					$port->set($set);
                     $port->on('Request', [$this, $value['request'] ?? 'onSwooleRequest']);
                     $port->on('Handshake', function (){
                         return false;
@@ -216,12 +215,7 @@ abstract class Swoole{
                     $set['open_http_protocol'] = true;
                     $set['open_websocket_protocol'] = true;
 					
-					$buf_set  = $this->getProbufSet($value['socket_port']);
-		
-					$final_set = array_merge($set,$buf_set);
-
-					$port->set($final_set);
-					
+					$port->set($set);
                     $port->on('Open', [$this, $value['open'] ?? 'onSwooleOpen']);
                     $port->on('Message', [$this, $value['message'] ?? 'onSwooleMessage']);
                     $port->on('Handshake', [$this, $value['handshake'] ?? 'onSwooleHandShake']);
@@ -235,13 +229,8 @@ abstract class Swoole{
                 if($port == false){
                     throw new \Exception("{$value['socket_port']}端口创建失败");
                 }
-                
-				$buf_set  = $this->getProbufSet($value['socket_port']);
-		
-				$final_set = array_merge($set,$buf_set);
 
-				$port->set($final_set);
-				
+				$port->set($set);				
                 $port->on('Connect', [$this, $value['connect'] ?? 'onSwooleConnect']);
                 $port->on('Receive', [$this, $value['receive'] ?? 'onSwooleReceive']);
                 $port->on('Close', [$this, $value['close'] ?? 'onSwooleClose']);
@@ -255,7 +244,7 @@ abstract class Swoole{
 	 * @param type $port
 	 * @return type
 	 */
-	public function getProbufSet($port)
+	protected function getProbufSet($port)
     {
 		$set = $this->getPack($port);
         if ($set == null) {
@@ -336,10 +325,6 @@ abstract class Swoole{
 		}
     }
 	
-	
-	
-	
-	
 	/**
      * 获取workerId
      * @return int
@@ -385,6 +370,14 @@ abstract class Swoole{
         }
         return false;
     }
+	/**
+	 * 根据客户端标识获取socket型号
+	 * @param type $fd 客户端标识
+	 * @return type
+	 */
+	public function getSocketTypeByFd($fd){
+		return $this->port_config[$this->getServerPortByFd($fd)]['socket_type'];
+	}
     /**
 	 * 通过fd获取客户端信息
      * @param $fd
@@ -576,5 +569,14 @@ abstract class Swoole{
         //更新共享内存
         $this->uid_fd_table->del($uid);
         $this->fd_uid_table->del($fd);
+    }
+    /**
+     * 魔术方法
+     * @param $name
+     * @param $arguments
+     * @return mixed
+     */
+    public function __call($name, $arguments){
+        return \co::call_user_func_array(array($this->server, $name), $arguments);
     }
 }

@@ -13,7 +13,7 @@ class SwooleMarco{
      */
     const MSG_TYPE_SEND = 0;
     /**
-     * 批量发消息
+     * 批量发消息给UID
      */
     const MSG_TYPE_SEND_BATCH = 1;
     /**
@@ -21,7 +21,7 @@ class SwooleMarco{
      */
     const MSG_TYPE_SEND_ALL = 2;
     /**
-     * 全服广播
+     * 全服广播(所有FD)
      */
     const MSG_TYPE_SEND_ALL_FD = 3;
 }

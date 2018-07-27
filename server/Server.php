@@ -23,24 +23,29 @@ final class Server extends SwooleWebSocketServer{
 	public static $application=null;
 	
 	/**
-	 * 构造函数
-	 * 把整个实例保存到$application
+	 * 初始化服务,配置相关参数
 	 */
 	public function __construct() {
 		parent::__construct();
 		self::$application = $this;
 	}
 	/**
-	 * 根据输入命令执行指令
-	 * @global type $argv
+	 * 启动server
 	 */
 	public function run(){
 		global $argv;
+		if(!preg_match("/cli/i", php_sapi_name()) ? true : false){
+			exit('Please run at the command');
+		}
 		$command = $argv[1] ?? "";
 		if(!empty($command)){
 			switch ($command) {
 				case 'start':
-					$this->beforeAppStart();
+					$master_pid = exec("ps -ef | grep {$this->name}-Master| grep -v 'grep ' | awk '{print $2}'");
+					if (!empty($master_pid)) {
+						Console::Error("Service already running");
+						exit(-1);
+					}
 					$option = $argv[2]??"";
 					if(!empty($option) && $option == "-d"){
 						$this->daemonize = 1;
@@ -61,22 +66,5 @@ final class Server extends SwooleWebSocketServer{
 			Console::help();
 			exit(-1);
 		}
-	}
-	/**
-	 * APP启动前执行的
-	 */
-	private function beforeAppStart() {
-		//检查服务状态
-		$this->checkAppStatus();
-	}
-	/**
-	 * 检查服务状态
-	 */
-	private function checkAppStatus(){
-		$master_pid = exec("ps -ef | grep {$this->name}-Master| grep -v 'grep ' | awk '{print $2}'");
-		if (!empty($master_pid)) {
-            Console::Error("Service already running");
-            exit(-1);
-        }
 	}
 }

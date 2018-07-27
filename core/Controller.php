@@ -3,6 +3,11 @@ namespace Core;
 
 class Controller{
 	/**
+	 * 当前客户端
+	 * @var type 
+	 */
+	public $fd = null;
+	/**
 	 * 使用TCP WEBSOCKET协议
 	 * 收到的客户端数据
 	 * @var type 
@@ -21,12 +26,13 @@ class Controller{
 	
 	/**
 	 * 设置数据
-	 * @param type $fd fd
+	 * @param type $fd fd 客服的标识符
 	 * @param type $client_data 客户端数据
 	 * @param type $request http请求
 	 * @param type $response http 响应
 	 */
-	public function before(&$client_data,&$request,&$response) {
+	public function before($fd,$client_data,$request,$response) {
+		$this->fd = $fd;
 		$this->client_data = $client_data;
 		$this->request = $request;
 		$this->response = $response;
@@ -36,7 +42,7 @@ class Controller{
 	 * 释放对象数据
 	 */
 	public function after(){
-        $this->fd = null;
+		$this->fd = null;
         $this->client_data = null;
         $this->request = null;
         $this->response = null;

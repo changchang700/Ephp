@@ -11,6 +11,7 @@ namespace Server;
 
 use Server\SwooleHttpServer;
 use Core\Core;
+
 abstract class SwooleWebSocketServer extends SwooleHttpServer{
 
     public function __construct(){
@@ -26,8 +27,8 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
             parent::start();
             return;
         }
-		$set = $this->getServerSet();
 		$first_server = $this->getFirstServer();
+		$set = $this->getServerSet($first_server['socket_port']);
 		
 		$socket_ssl = false;
 		if(array_key_exists('ssl_cert_file', $first_server) && array_key_exists('ssl_key_file', $first_server)){
@@ -43,11 +44,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
 			$this->server = new \swoole_websocket_server($first_server['socket_name'], $first_server['socket_port'], SWOOLE_PROCESS, $first_server['socket_protocol']);
 		}
 		
-		$buf_set  = $this->getProbufSet($first_server['socket_port']);
-		
-		$final_set = array_merge($set,$buf_set);
-		
-		$this->server->set($final_set);
+		$this->server->set($set);
 		$this->server->on('Start', [$this, 'onSwooleStart']);
 		$this->server->on('WorkerStart', [$this, 'onSwooleWorkerStart']);
 		$this->server->on('Connect', [$this, 'onSwooleConnect']);
@@ -106,7 +103,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
 			$method_name = $route->getMethodName();
 			$request = null;
 			$response = null;
-			Core::getInstance()->run($controller_name,$method_name,$client_data,$request,$response);
+			Core::getInstance()->run($controller_name,$method_name,$frame->fd,$client_data,$request,$response);
 		}catch(\Exception $e){
 			return $route->errorHandle($e, $frame->fd);
 		}
