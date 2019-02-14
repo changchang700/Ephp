@@ -1,19 +1,3 @@
-<p align =“center”>
-    <a href="https://www.imiphp.com" target="_blank">
-        <img src =“https://raw.githubusercontent.com/Yurunsoft/IMI/dev/res/logo.png"alt =”imi“/>
-    </A>
-</ p>
-
-[！[最新版本]（https://img.shields.io/packagist/v/yurunsoft/imi.svg）]（https://packagist.org/packages/yurunsoft/imi）
-[！[特拉维斯（https://img.shields.io/travis/Yurunsoft/IMI.svg）（https://travis-ci.org/Yurunsoft/IMI）
-[！[Php Version]（https://img.shields.io/badge/php-%3E=7.1-brightgreen.svg）]（https://secure.php.net/）
-[！[Swoole Version]（https://img.shields.io/badge/swoole-%3E=4.0.0-brightgreen.svg）]（https://github.com/swoole/swoole-src）
-[！[Hiredis Version]（https://img.shields.io/badge/hiredis-%3E=0.1-brightgreen.svg）]（https://github.com/redis/hiredis）
-[！[IMI Doc]（https://img.shields.io/badge/docs-passing-green.svg）]（https://doc.imiphp.com）
-[！[Open Collective的支持者]（https://opencollective.com/IMI/backers/badge.svg）]（#backers） 
-[！[公开集体赞助商]（https://opencollective.com/IMI/sponsors/badge.svg）]（＃赞助商） 
-[！[IMI License]（https://img.shields.io/github/license/Yurunsoft/imi.svg）]（https://github.com/Yurunsoft/imi/blob/master/LICENSE）
-
 ##介绍
 
 EPHP是基于Swoole开发的协程PHP开发框架，完美支持Http，WebSocket，TCP，UDP开发，拥有常驻内存，协程异步非阻塞IO等优点。
