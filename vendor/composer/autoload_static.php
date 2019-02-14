@@ -11,6 +11,11 @@ class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
         array (
             'Views\\' => 6,
         ),
+        'T' => 
+        array (
+            'Timer\\' => 6,
+            'Task\\' => 5,
+        ),
         'S' => 
         array (
             'Server\\' => 7,
@@ -21,16 +26,23 @@ class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
         ),
         'P' => 
         array (
+            'Process\\' => 8,
             'Pack\\' => 5,
         ),
         'M' => 
         array (
             'Models\\' => 7,
+            'Marco\\' => 6,
+        ),
+        'D' => 
+        array (
+            'Db\\' => 3,
         ),
         'C' => 
         array (
             'Core\\' => 5,
             'Controllers\\' => 12,
+            'Console\\' => 8,
             'Config\\' => 7,
             'Components\\' => 11,
         ),
@@ -41,6 +53,14 @@ class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
         array (
             0 => __DIR__ . '/../..' . '/views',
         ),
+        'Timer\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/timer',
+        ),
+        'Task\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/task',
+        ),
         'Server\\' => 
         array (
             0 => __DIR__ . '/../..' . '/server',
@@ -48,6 +68,10 @@ class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
         'Route\\' => 
         array (
             0 => __DIR__ . '/../..' . '/route',
+        ),
+        'Process\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/process',
         ),
         'Pack\\' => 
         array (
@@ -57,6 +81,14 @@ class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
         array (
             0 => __DIR__ . '/../..' . '/models',
         ),
+        'Marco\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/marco',
+        ),
+        'Db\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/db',
+        ),
         'Core\\' => 
         array (
             0 => __DIR__ . '/../..' . '/core',
@@ -64,6 +96,10 @@ class ComposerStaticInit0a8e6ef2d30e7d95a5d7a14e48902d61
         'Controllers\\' => 
         array (
             0 => __DIR__ . '/../..' . '/controllers',
+        ),
+        'Console\\' => 
+        array (
+            0 => __DIR__ . '/../..' . '/console',
         ),
         'Config\\' => 
         array (

@@ -1,16 +1,18 @@
 <?php
+
 namespace Pack;
 
-interface IPack{
-    function encode($buffer);
+interface IPack {
 
-    function decode($buffer);
+	function encode($buffer);
 
-    function pack($data);
+	function decode($buffer);
 
-    function unPack($data);
+	function pack($data);
 
-    function getProbufSet();
+	function unPack($data);
 
-    function errorHandle($e, $fd);
+	function getPackSet();
+
+	function errorHandle($e, $fd);
 }

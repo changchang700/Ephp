@@ -1,12 +1,4 @@
 <?php
-/**
- * 包含http服务器
- * Created by PhpStorm.
- * User: zhangjincheng
- * Date: 16-7-29
- * Time: 上午9:42
- */
-
 namespace Server;
 
 use Server\SwooleHttpServer;
@@ -28,6 +20,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
             return;
         }
 		$first_server = $this->getFirstServer();
+		//获取该端口总配置参数
 		$set = $this->getServerSet($first_server['socket_port']);
 		
 		$socket_ssl = false;
@@ -74,19 +67,19 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
 
 	/**
      * websocket连接上时
-     * @param $server
+     * @param $serv
      * @param $request
      */
-    public function onSwooleOpen($server, $request){
+    public function onSwooleOpen($serv, $request){
 		
     }
 
     /**
      * websocket收到消息时
-     * @param $server
+     * @param $serv
      * @param $frame
      */
-    public function onSwooleMessage($server, $frame){
+    public function onSwooleMessage($serv, $frame){
 		//解析封包
 		$pack = $this->getPack($this->getServerPortByFd($frame->fd));
 		try {
@@ -115,7 +108,7 @@ abstract class SwooleWebSocketServer extends SwooleHttpServer{
      * @param $response
      * @return bool
      */
-    public function onSwooleHandShake(\swoole_http_request $request, \swoole_http_response $response){
+    public function onSwooleHandShake($request, $response){
 		//此处可以设置用户的验证代码，是否连接
 			/**TODO**/
 		// websocket握手连接算法验证

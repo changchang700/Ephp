@@ -20,7 +20,13 @@
 			"Pack\\": "pack/",
 			"Route\\": "route/",
 			"Server\\": "server/",
-			"Views\\": "views/"
+			"Views\\": "views/",
+            "Task\\":"task/",
+            "Timer\\":"timer/",
+            "Process\\":"process/",
+            "Console\\":"console/",
+            "Marco\\":"marco/",
+            "Db\\":"db/"
 		}
     }
 }

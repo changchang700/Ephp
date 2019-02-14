@@ -2,7 +2,7 @@
 namespace Core;
 
 use Core\Core;
-use Components\Console\Console;
+use Console\Console;
 class Core{
     private static $instance;
     private $pool = [];
@@ -34,8 +34,12 @@ class Core{
 	 */
     public function run(&$controller_name,&$method_name, &$fd, &$client_data,&$request, &$response){
 		//定义默认方法
-        if ($controller_name == null) $controller_name = 'index';
-		if($method_name == null) $method_name = 'index';
+		if ($controller_name == null){
+			$controller_name = 'index';
+		}
+		if($method_name == null){
+			$method_name = 'index';
+		}
         $controller_names = $this->pool[$controller_name] ?? null;
         if ($controller_names == null) {
             $controller_names = $this->pool[$controller_name] = new \SplQueue();

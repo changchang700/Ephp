@@ -11,7 +11,7 @@ class Config{
 	 * 保存所有配置文件
 	 * @var type 
 	 */
-	private $config;
+	private $config = [];
 	/**
 	 * 获取本身实例
 	 * @return Config
@@ -24,11 +24,19 @@ class Config{
 	}
 	
 	public function __construct() {
-		$this->config = include __DIR__.'/../config/config.php';
+		$path = __DIR__.DIRECTORY_SEPARATOR.'..'.DIRECTORY_SEPARATOR.'config'.DIRECTORY_SEPARATOR;
+		$list = scandir($path);
+		foreach ($list as $file) {
+			if(is_file($path.$file)){
+				$name = substr($file, 0, strlen($file)-4);
+				$this->config[$name] = require_once ($path.$file);
+			}
+		}
 	}
 
 	/**
-	 * 获取配置，如果key为空则获取所有，否则获取单个节点
+	 * 获取应用配置
+	 * 如果key为空则获取所有配置参数
 	 * @param type $key 配置文件key
 	 * @return type array
 	 */

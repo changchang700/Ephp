@@ -7,12 +7,18 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Views\\' => array($baseDir . '/views'),
+    'Timer\\' => array($baseDir . '/timer'),
+    'Task\\' => array($baseDir . '/task'),
     'Server\\' => array($baseDir . '/server'),
     'Route\\' => array($baseDir . '/route'),
+    'Process\\' => array($baseDir . '/process'),
     'Pack\\' => array($baseDir . '/pack'),
     'Models\\' => array($baseDir . '/models'),
+    'Marco\\' => array($baseDir . '/marco'),
+    'Db\\' => array($baseDir . '/db'),
     'Core\\' => array($baseDir . '/core'),
     'Controllers\\' => array($baseDir . '/controllers'),
+    'Console\\' => array($baseDir . '/console'),
     'Config\\' => array($baseDir . '/config'),
     'Components\\' => array($baseDir . '/components'),
 );
